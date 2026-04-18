@@ -6,4 +6,15 @@ results/
 results_test/
 *.xlsx
 *.yaml
-!docker-compose.yaml
+
+# macOS
+.DS_Store
+
+# Claude Code
+CLAUDE.md
+.claude/
+.remember/
+.Rhistory
+docs/superpowers/
+docs/plans/
+docs/specs/

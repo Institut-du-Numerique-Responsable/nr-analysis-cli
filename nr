@@ -18,6 +18,15 @@ yargs(hideBin(process.argv))
                     describe: 'Report output file path',
                     default: 'results.xlsx',
                 })
+                .option('url', {
+                    type: 'string',
+                    description: 'URL to analyse directly (bypasses url_input_file)',
+                })
+                .option('output', {
+                    alias: 'o',
+                    type: 'string',
+                    description: 'Report output file path (used with --url)',
+                })
                 .option('grafana_link', {
                     description: 'Grafana link to display in HTML report when using influxdbhtml format',
                     type: 'string',
@@ -50,7 +59,6 @@ yargs(hideBin(process.argv))
                 .option('influxdb_hostname', {
                     type: 'string',
                 })
-
                 .option('influxdb_org', {
                     type: 'string',
                 })
@@ -104,6 +112,21 @@ yargs(hideBin(process.argv))
                     type: 'number',
                     description: 'Number of displayed worst rules',
                     default: 5,
+                })
+                .option('recursive', {
+                    type: 'boolean',
+                    description: 'Crawl internal links recursively from --url (requires --url)',
+                    default: false,
+                })
+                .option('depth', {
+                    type: 'number',
+                    description: 'Maximum crawl depth (used with --recursive)',
+                    default: 5,
+                })
+                .option('max_pages', {
+                    type: 'number',
+                    description: 'Maximum number of pages to crawl and analyse (used with --recursive)',
+                    default: 200,
                 });
         },
         (argv) => {

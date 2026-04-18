@@ -4,9 +4,19 @@ const Mustache = require('mustache');
 const rules = require('../conf/rules');
 const utils = require('./utils');
 
-/**
- * Css class best practices
- */
+const HTML_ESCAPES = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;',
+};
+
+function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, (c) => HTML_ESCAPES[c]);
+}
+
+// CSS class for each best-practice compliance level
 const cssBestPractices = {
     A: 'checkmark-success',
     B: 'close-warning',
@@ -37,6 +47,14 @@ const bestPracticesKey = [
     'StyleSheets',
     'UseETags',
     'UseStandardTypefaces',
+    'ModernImageFormats',
+    'OptimizeFonts',
+    'TrackingScripts',
+    'NoExternalIframes',
+    'NoAutoplayVideo',
+    'LazyLoadImages',
+    'NoExcessivePreload',
+    'NoRenderBlockingResources',
 ];
 
 //create html report for all the analysed pages and recap on the first sheet
@@ -96,6 +114,7 @@ function readAllReports(fileList, grafanaLink, translator) {
 
         const hostname = report_data.pageInformations.url.split('/')[2];
         const scenarioName = report_data.pageInformations.name || report_data.pageInformations.url;
+        const scenarioNameHtml = escapeHtml(scenarioName);
         const pageFilename = report_data.pageInformations.name
             ? `${removeForbiddenCharacters(report_data.pageInformations.name)}.html`
             : `${report_data.index}.html`;
@@ -158,20 +177,19 @@ function readAllReports(fileList, grafanaLink, translator) {
                 // Manage best practices
                 let nbBestPracticesToCorrect = 0;
                 pageBestPractices.forEach((bp) => {
-                    if (page.bestPractices) {
-                        bp.note = cssBestPractices[page.bestPractices[bp.key].complianceLevel || 'A'];
-                        bp.comment = page.bestPractices[bp.key].comment || '';
-                        bp.errors = page.bestPractices[bp.key].detailComment;
-
-                        if (
-                            cssBestPractices[page.bestPractices[bp.key].complianceLevel || 'A'] !== 'checkmark-success'
-                        ) {
-                            // if error, increment number of incorrect best practices
-                            nbBestPracticesToCorrect += 1;
-                        }
-                    } else {
+                    if (!page.bestPractices) {
                         bp.note = 'A';
                         bp.comment = '';
+                        return;
+                    }
+                    const pageBp = page.bestPractices[bp.key];
+                    const note = cssBestPractices[pageBp.complianceLevel || 'A'];
+                    bp.note = note;
+                    bp.comment = pageBp.comment || '';
+                    bp.errors = pageBp.detailComment;
+
+                    if (note !== 'checkmark-success') {
+                        nbBestPracticesToCorrect += 1;
                     }
                 });
 
@@ -199,11 +217,9 @@ function readAllReports(fileList, grafanaLink, translator) {
                 success: report_data.success,
                 cssRowError: '',
                 name: scenarioName,
-                link: `<a href="${pageFilename}">${scenarioName}</a>`,
+                link: `<a href="${escapeHtml(pageFilename)}">${scenarioNameHtml}</a>`,
                 filename: pageFilename,
-                header: `${translator.translate('greenItAnalysisReport')} > <a class="text-white" href="${
-                    report_data.pageInformations.url
-                }">${scenarioName}</a>`,
+                header: `${escapeHtml(translator.translate('nrAnalysisReport'))} > <a class="text-white" href="${escapeHtml(report_data.pageInformations.url)}">${scenarioNameHtml}</a>`,
                 bigEcoIndex: `${report_data.ecoIndex} <span class="grade big-grade ${report_data.grade}">${report_data.grade}</span>`,
                 smallEcoIndex: `${report_data.ecoIndex} <span class="grade ${report_data.grade}">${report_data.grade}</span>`,
                 grade: report_data.grade,
@@ -220,13 +236,11 @@ function readAllReports(fileList, grafanaLink, translator) {
                 name: scenarioName,
                 filename: pageFilename,
                 success: false,
-                header: `${translator.translate('greenItAnalysisReport')} > <a class="text-white" href="${
-                    report_data.pageInformations.url
-                }">${scenarioName}</a>`,
+                header: `${escapeHtml(translator.translate('nrAnalysisReport'))} > <a class="text-white" href="${escapeHtml(report_data.pageInformations.url)}">${scenarioNameHtml}</a>`,
                 cssRowError: 'bg-danger',
                 nbRequest: 0,
                 pages: [],
-                link: `<a href="${pageFilename}">${scenarioName}</a>`,
+                link: `<a href="${escapeHtml(pageFilename)}">${scenarioNameHtml}</a>`,
                 bestPractices: [],
             };
         }
@@ -256,18 +270,10 @@ function readGlobalReport(
     const globalReport_data = JSON.parse(fs.readFileSync(path).toString());
 
     let ecoIndex = '';
-
-    if (globalReport_data.worstEcoIndexes) {
-        try {
-            globalReport_data.worstEcoIndexes.forEach((worstEcoIndex) => {
-                ecoIndex = `${ecoIndex} ${ecoIndex === '' ? '' : '/'} ${
-                    worstEcoIndex.ecoIndex
-                } <span class="grade big-grade ${worstEcoIndex.grade}">${worstEcoIndex.grade}</span>`;
-            });
-        } catch (err) {
-            console.error(err);
-        }
-    }
+    (globalReport_data.worstEcoIndexes || []).forEach((worstEcoIndex) => {
+        const separator = ecoIndex === '' ? '' : '/';
+        ecoIndex = `${ecoIndex} ${separator} ${worstEcoIndex.ecoIndex} <span class="grade big-grade ${worstEcoIndex.grade}">${worstEcoIndex.grade}</span>`;
+    });
 
     const globalReportVariables = {
         date: globalReport_data.date,
@@ -297,16 +303,14 @@ function constructBestPracticesGlobal(allReportsVariables, translator) {
         let success = true;
 
         allReportsVariables.forEach((scenario) => {
-            if (scenario.pages) {
-                scenario.pages.forEach((page) => {
-                    const best = page.bestPractices.filter((bp) => bp.key === bestPractice.key)[0];
-
-                    if (success && best.note === 'close-error') {
-                        success = false;
-                        note = 'close-error';
-                    }
-                });
-            }
+            if (!scenario.pages) return;
+            scenario.pages.forEach((page) => {
+                const best = page.bestPractices.find((bp) => bp.key === bestPractice.key);
+                if (success && best.note === 'close-error') {
+                    success = false;
+                    note = 'close-error';
+                }
+            });
         });
 
         const bestPracticeGlobal = {
@@ -326,60 +330,38 @@ function constructBestPracticesGlobal(allReportsVariables, translator) {
     return bestPracticesGlobal;
 }
 
-/**
- * Extract best practices from report
- * @param {} bestPracticesFromReport
- * @returns
- */
+const _bpCache = new Map();
+
 function extractBestPractices(translator) {
-    let bestPractices = [];
-    let bestPractice;
-    let rule;
-    let index = 0;
-
-    bestPracticesKey.forEach((bestPracticeName) => {
-        rule = rules.find((p) => p.bestPractice === bestPracticeName);
-        bestPractice = {
-            key: bestPracticeName,
-            id: `collapse${index}`,
-            name: translator.translateRule(bestPracticeName),
-            description: translator.translateRule(`${bestPracticeName}_DetailDescription`),
-            priority: rule.priority,
-            impact: rule.impact,
-            effort: rule.effort,
-            notes: [],
-            pages: [],
-            comments: [],
-        };
-        index++;
-        bestPractices.push(bestPractice);
-    });
-
-    return bestPractices;
+    const catalog = translator.getCatalog();
+    if (!_bpCache.has(catalog)) {
+        const templates = bestPracticesKey.map((bestPracticeName, index) => {
+            const rule = rules.find((p) => p.bestPractice === bestPracticeName);
+            return {
+                key: bestPracticeName,
+                id: `collapse${index}`,
+                name: translator.translateRule(bestPracticeName),
+                description: translator.translateRule(`${bestPracticeName}_DetailDescription`),
+                priority: rule.priority,
+                impact: rule.impact,
+                effort: rule.effort,
+            };
+        });
+        _bpCache.set(catalog, templates);
+    }
+    return _bpCache.get(catalog).map((bp) => ({ ...bp, notes: [], pages: [], comments: [] }));
 }
 
 /**
- * Manage best practice state for each page
- * @param {*} pages
+ * Aggregate best-practice results across all pages of a scenario.
  */
 function manageScenarioBestPratices(pages, translator) {
+    // extractBestPractices() returns fresh objects with `pages`, `notes` and `comments` pre-initialised
     const bestPractices = extractBestPractices(translator);
-    // loop over each best practice
     pages.forEach((page) => {
         bestPractices.forEach((bp) => {
-            if (!bp.pages) {
-                bp.pages = [];
-            }
-            if (!bp.notes) {
-                bp.notes = [];
-            }
-            if (!bp.comments) {
-                bp.comments = [];
-            }
-
             bp.pages.push(page.name);
             if (page.bestPractices) {
-                // Get mapping best practice and update data
                 const currentBestPractice = page.bestPractices.find((element) => element.key === bp.key);
                 bp.notes.push(currentBestPractice.note || 'A');
                 bp.comments.push(currentBestPractice.comment || '');
@@ -389,47 +371,83 @@ function manageScenarioBestPratices(pages, translator) {
     return bestPractices;
 }
 
+const GLOBAL_LABEL_KEYS = [
+    ['header', 'nrAnalysisReport'],
+    'executionDate',
+    'hostname',
+    'platform',
+    'connection',
+    'scenarios',
+    'errors',
+    'error',
+    'scenario',
+    'ecoIndex',
+    'shareDueToActions',
+    'greenhouseGasesEmission',
+    'water',
+    'bestPracticesToImplement',
+    'bestPractices',
+    'priority',
+    'allPriorities',
+    'bestPractice',
+    'effort',
+    'impact',
+    'note',
+    'footerEcoIndex',
+    'footerBestPractices',
+    'trend',
+];
+
+const GLOBAL_TOOLTIP_KEYS = [
+    ['ecoIndex', 'tooltip_ecoIndex'],
+    ['shareDueToActions', 'tooltip_shareDueToActions'],
+    ['bestPracticesToImplement', 'tooltip_bestPracticesToImplement'],
+];
+
+const PAGE_LABEL_KEYS = [
+    'requests',
+    'pageSize',
+    'domSize',
+    'steps',
+    'step',
+    'ecoIndex',
+    'water',
+    'greenhouseGasesEmission',
+    'bestPractices',
+    'bestPractice',
+    'result',
+    'effort',
+    'impact',
+    'priority',
+    'note',
+];
+
+/**
+ * Build a { labelName: translatedText } object from a list of keys.
+ * Each entry is either a bare key (used both as target field and translation key)
+ * or a [fieldName, translationKey] tuple.
+ */
+function buildLabels(translator, keys) {
+    const out = {};
+    keys.forEach((entry) => {
+        const [field, key] = Array.isArray(entry) ? entry : [entry, entry];
+        out[field] = translator.translate(key);
+    });
+    return out;
+}
+
 /**
  * Write global report from global template
  */
 function writeGlobalReport(globalReportVariables, outputFile, progressBar, translator) {
     const globalReportVariablesWithLabels = {
-        labels: {
-            header: translator.translate('greenItAnalysisReport'),
-            executionDate: translator.translate('executionDate'),
-            hostname: translator.translate('hostname'),
-            platform: translator.translate('platform'),
-            connection: translator.translate('connection'),
-            scenarios: translator.translate('scenarios'),
-            errors: translator.translate('errors'),
-            error: translator.translate('error'),
-            scenario: translator.translate('scenario'),
-            ecoIndex: translator.translate('ecoIndex'),
-            shareDueToActions: translator.translate('shareDueToActions'),
-            greenhouseGasesEmission: translator.translate('greenhouseGasesEmission'),
-            water: translator.translate('water'),
-            bestPracticesToImplement: translator.translate('bestPracticesToImplement'),
-            bestPractices: translator.translate('bestPractices'),
-            priority: translator.translate('priority'),
-            allPriorities: translator.translate('allPriorities'),
-            bestPractice: translator.translate('bestPractice'),
-            effort: translator.translate('effort'),
-            impact: translator.translate('impact'),
-            note: translator.translate('note'),
-            footerEcoIndex: translator.translate('footerEcoIndex'),
-            footerBestPractices: translator.translate('footerBestPractices'),
-            trend: translator.translate('trend'),
-        },
-        tooltips: {
-            ecoIndex: translator.translate('tooltip_ecoIndex'),
-            shareDueToActions: translator.translate('tooltip_shareDueToActions'),
-            bestPracticesToImplement: translator.translate('tooltip_bestPracticesToImplement'),
-        },
+        labels: buildLabels(translator, GLOBAL_LABEL_KEYS),
+        tooltips: buildLabels(translator, GLOBAL_TOOLTIP_KEYS),
         values: globalReportVariables,
     };
 
     const template = fs.readFileSync(path.join(__dirname, 'template/global.html')).toString();
-    var rendered = Mustache.render(template, globalReportVariablesWithLabels);
+    const rendered = Mustache.render(template, globalReportVariablesWithLabels);
     fs.writeFileSync(outputFile, rendered);
 
     if (progressBar) {
@@ -443,35 +461,18 @@ function writeGlobalReport(globalReportVariables, outputFile, progressBar, trans
  * Write scenarios report from page template
  */
 function writeAllReports(allReportsVariables, outputFolder, progressBar, translator) {
-    const labels = {
-        requests: translator.translate('requests'),
-        pageSize: translator.translate('pageSize'),
-        domSize: translator.translate('domSize'),
-        steps: translator.translate('steps'),
-        step: translator.translate('step'),
-        ecoIndex: translator.translate('ecoIndex'),
-        water: translator.translate('water'),
-        greenhouseGasesEmission: translator.translate('greenhouseGasesEmission'),
-        bestPractices: translator.translate('bestPractices'),
-        bestPractice: translator.translate('bestPractice'),
-        result: translator.translate('result'),
-        effort: translator.translate('effort'),
-        impact: translator.translate('impact'),
-        priority: translator.translate('priority'),
-        note: translator.translate('note'),
-    };
-
+    const labels = buildLabels(translator, PAGE_LABEL_KEYS);
     const template = fs.readFileSync(path.join(__dirname, 'template/page.html')).toString();
-    let reportVariablesWithLabels;
+    const resolvedOutputFolder = path.resolve(outputFolder);
+
     allReportsVariables.forEach((reportVariables) => {
-        reportVariablesWithLabels = {
-            labels: labels,
-            values: reportVariables,
-        };
+        const rendered = Mustache.render(template, { labels, values: reportVariables });
 
-        var rendered = Mustache.render(template, reportVariablesWithLabels);
-
-        fs.writeFileSync(`${outputFolder}/${reportVariables.filename}`, rendered);
+        const fullPath = path.resolve(outputFolder, reportVariables.filename);
+        if (!fullPath.startsWith(resolvedOutputFolder + path.sep)) {
+            throw new Error(`Path traversal détecté pour le fichier : ${reportVariables.filename}`);
+        }
+        fs.writeFileSync(fullPath, rendered);
 
         if (progressBar) {
             progressBar.tick();
@@ -482,13 +483,11 @@ function writeAllReports(allReportsVariables, outputFolder, progressBar, transla
 }
 
 function removeForbiddenCharacters(str) {
-    str = removeForbiddenCharactersInFile(str);
-    str = removeAccents(str);
-    return str;
+    return removeAccents(removeForbiddenCharactersInFile(str));
 }
 
 function removeForbiddenCharactersInFile(str) {
-    return str.replace(/[/\\?%*:|"<>° ]/g, '');
+    return str.replace(/[/\\?%*:|"<>°. ]/g, '').replace(/\.\./g, '');
 }
 
 function removeAccents(str) {

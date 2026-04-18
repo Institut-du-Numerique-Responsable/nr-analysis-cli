@@ -83,6 +83,11 @@ function MeasuresAcquisition(rules) {
             emptySrcTagNumber: 0,
             inlineJsScriptsNumber: 0,
             imagesResizedInBrowser: [],
+            autoplayMediaCount: 0,
+            lazyLoadStats: { total: 0, lazy: 0 },
+            preloadCount: 0,
+            renderBlockingScriptsCount: 0,
+            externalIframesCount: 0,
         };
     };
 
@@ -119,6 +124,12 @@ function MeasuresAcquisition(rules) {
 
             measures.imagesResizedInBrowser = frameMeasures.imagesResizedInBrowser;
 
+            measures.autoplayMediaCount += frameMeasures.autoplayMediaCount || 0;
+            measures.lazyLoadStats = frameMeasures.lazyLoadStats || { total: 0, lazy: 0 };
+            measures.preloadCount += frameMeasures.preloadCount || 0;
+            measures.renderBlockingScriptsCount += frameMeasures.renderBlockingScriptsCount || 0;
+            measures.externalIframesCount += frameMeasures.externalIframesCount || 0;
+
             localRulesChecker.sendEvent('frameMeasuresReceived', measures);
         }
     };
@@ -151,10 +162,9 @@ function MeasuresAcquisition(rules) {
                 if (entry.response._transferSize) {
                     measures.responsesSize += entry.response._transferSize;
                     measures.responsesSizeUncompress += entry.response.content.size;
-                } else {
-                    // In firefox , entry.response.content.size can sometimes be undefined
-                    if (entry.response.content.size) measures.responsesSize += entry.response.content.size;
-                    //debug(() => `entry size = ${entry.response.content.size} , responseSize = ${measures.responsesSize}`);
+                } else if (entry.response.content.size) {
+                    // In firefox, entry.response.content.size can sometimes be undefined
+                    measures.responsesSize += entry.response.content.size;
                 }
             });
             if (analyseBestPractices) localRulesChecker.sendEvent('harReceived', measures);

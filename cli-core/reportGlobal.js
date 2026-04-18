@@ -2,58 +2,43 @@ const fs = require('fs');
 const path = require('path');
 const { getEcoIndexGrade, getGradeEcoIndex, createProgressBar } = require('./utils');
 
-//Path to the url file
 const SUBRESULTS_DIRECTORY = path.join(__dirname, '../results');
 
-// keep track of worst pages based on ecoIndex
+// Insert-sort `obj` into `table`, ascending by ecoIndex, capped at `number` entries.
 function worstPagesHandler(number) {
     return (obj, table) => {
-        let index;
-        for (index = 0; index < table.length; index++) {
-            if (obj.ecoIndex < table[index].ecoIndex) break;
-        }
-        let addObj = {
+        const entry = {
             nb: obj.nb,
             url: obj.pageInformations.url,
             grade: obj.grade,
             ecoIndex: obj.ecoIndex,
         };
-        table.splice(index, 0, addObj);
+        let index = table.findIndex((item) => obj.ecoIndex < item.ecoIndex);
+        if (index === -1) index = table.length;
+        table.splice(index, 0, entry);
         if (table.length > number) table.pop();
         return table;
     };
 }
 
-//keep track of the least followed rule based on grade
+// Return the names of the `number` least-followed best practices, lowest grade total first.
 function handleWorstRule(bestPracticesTotal, number) {
-    let table = [];
-    for (let key in bestPracticesTotal) {
-        table.push({ name: key, total: bestPracticesTotal[key] });
-    }
-    return table
-        .sort((a, b) => a.total - b.total)
+    return Object.entries(bestPracticesTotal)
+        .sort((a, b) => a[1] - b[1])
         .slice(0, number)
-        .map((obj) => obj.name);
+        .map(([name]) => name);
 }
 
 async function create_global_report(reports, options, translator) {
-    //Timeout for an analysis
     const TIMEOUT = options.timeout || 'No data';
-    //Concurent tab
     const MAX_TAB = options.max_tab || 'No data';
-    //Nb of retry before dropping analysis
     const RETRY = options.retry || 'No data';
-    //Nb of displayed worst pages
     const WORST_PAGES = options.worst_pages;
-    //Nb of displayed worst rules
     const WORST_RULES = options.worst_rules;
-
     const DEVICE = options.device;
     const LANGUAGE = options.language;
 
-    let handleWorstPages = worstPagesHandler(WORST_PAGES);
-
-    //initialise progress bar
+    const handleWorstPages = worstPagesHandler(WORST_PAGES);
     const progressBar = createProgressBar(
         options,
         reports.length + 2,
@@ -61,40 +46,42 @@ async function create_global_report(reports, options, translator) {
         'Creating global report ...'
     );
 
-    let eco = 0; //future average
-    let worstEcoIndexes = [null, null];
-    let err = [];
+    let eco = 0; // running sum, turned into an average below
+    const worstEcoIndexes = [null, null];
+    const err = [];
+    const worstPages = [];
+    const bestPracticesTotal = {};
     let hostname;
-    let worstPages = [];
-    let bestPracticesTotal = {};
     let nbBestPracticesToCorrect = 0;
 
-    //Creating one report sheet per file
-    reports.forEach((file) => {
-        let obj = JSON.parse(fs.readFileSync(file.path).toString());
+    // Read every sub-report file in parallel
+    const allData = await Promise.all(
+        reports.map(async (file) => {
+            const content = await fs.promises.readFile(file.path, 'utf-8');
+            return { file, obj: JSON.parse(content) };
+        })
+    );
+
+    allData.forEach(({ file, obj }) => {
         if (!hostname) hostname = obj.pageInformations.url.split('/')[2];
         obj.nb = parseInt(file.name);
-        //handle potential failed analyse
+
         if (obj.success) {
             eco += obj.ecoIndex;
             const pageWorstEcoIndexes = getWorstEcoIndexes(obj);
-            if (!worstEcoIndexes[0] || worstEcoIndexes[0].ecoIndex > pageWorstEcoIndexes[0].ecoIndex) {
-                // update global worst ecoindex
-                worstEcoIndexes[0] = { ...pageWorstEcoIndexes[0] };
-            }
-            if (!worstEcoIndexes[1] || worstEcoIndexes[1].ecoIndex > pageWorstEcoIndexes[1].ecoIndex) {
-                // update global worst ecoindex
-                worstEcoIndexes[1] = { ...pageWorstEcoIndexes[1] };
-            }
+            [0, 1].forEach((i) => {
+                if (!worstEcoIndexes[i] || worstEcoIndexes[i].ecoIndex > pageWorstEcoIndexes[i].ecoIndex) {
+                    worstEcoIndexes[i] = { ...pageWorstEcoIndexes[i] };
+                }
+            });
 
             nbBestPracticesToCorrect += obj.nbBestPracticesToCorrect;
             handleWorstPages(obj, worstPages);
             obj.pages.forEach((page) => {
-                if (page.bestPractices) {
-                    for (let key in page.bestPractices) {
-                        bestPracticesTotal[key] = bestPracticesTotal[key] || 0;
-                        bestPracticesTotal[key] += getGradeEcoIndex(page.bestPractices[key].complianceLevel || 'A');
-                    }
+                if (!page.bestPractices) return;
+                for (const key in page.bestPractices) {
+                    bestPracticesTotal[key] = bestPracticesTotal[key] || 0;
+                    bestPracticesTotal[key] += getGradeEcoIndex(page.bestPractices[key].complianceLevel || 'A');
                 }
             });
         } else {
@@ -108,44 +95,31 @@ async function create_global_report(reports, options, translator) {
         if (progressBar) progressBar.tick();
     });
 
-    let proxy = null;
-    if (options.proxy?.server) {
-        const { protocol, hostname: host, port } = new URL(options.proxy.server);
-        const { user, password } = options.proxy;
-        const auth = user && password ? { username: user, password } : undefined;
-        proxy = {
-            protocol: protocol.slice(0, -1),
-            host,
-            port,
-            auth,
-        };
-    }
-    //Add info the recap sheet
-    //Prepare data
+    const nbSuccessful = reports.length - err.length;
+    const averageEco = nbSuccessful > 0 ? Math.round(eco / nbSuccessful) : 'No data';
+
     const date = new Date();
-    eco = reports.length - err.length != 0 ? Math.round(eco / (reports.length - err.length)) : 'No data'; //Average EcoIndex
-    let globalSheet_data = {
+    const globalSheet_data = {
         date: `${date.toLocaleDateString(LANGUAGE)} ${date.toLocaleTimeString(LANGUAGE)}`,
-        hostname: hostname,
+        hostname,
         device: DEVICE,
-        connection: options.mobile ? translator.translate('mobile') : translator.translate('wired'),
-        grade: getEcoIndexGrade(eco),
-        ecoIndex: eco,
-        worstEcoIndexes: worstEcoIndexes,
+        connection: translator.translate(options.mobile ? 'mobile' : 'wired'),
+        grade: getEcoIndexGrade(averageEco),
+        ecoIndex: averageEco,
+        worstEcoIndexes,
         nbScenarios: reports.length,
         timeout: parseInt(TIMEOUT),
         maxTab: parseInt(MAX_TAB),
         retry: parseInt(RETRY),
         errors: err,
-        worstPages: worstPages,
+        worstPages,
         worstRules: handleWorstRule(bestPracticesTotal, WORST_RULES),
-        nbBestPracticesToCorrect: nbBestPracticesToCorrect,
+        nbBestPracticesToCorrect,
     };
 
     if (progressBar) progressBar.tick();
 
-    //save report
-    let filePath = path.join(SUBRESULTS_DIRECTORY, 'globalReport.json');
+    const filePath = path.join(SUBRESULTS_DIRECTORY, 'globalReport.json');
     try {
         fs.writeFileSync(filePath, JSON.stringify(globalSheet_data));
     } catch (error) {
@@ -160,34 +134,31 @@ async function create_global_report(reports, options, translator) {
     };
 }
 
+// Returns [worstFirstAction, worstLastAction]. When a page has a single action, both slots use it.
 function getWorstEcoIndexes(obj) {
-    let worstEcoIndexes = [null, null];
+    let worstFirst = null;
+    let worstLast = null;
+
     obj.pages.forEach((page) => {
-        worstEcoIndexes = worstEcoIndexes.map((worstEcoIndex, i) => {
-            if (page.actions.length === 1 || i === 0) {
-                // first = last if only one value, otherwise return value of first action
-                return getWorstEcoIndex(page.actions[0].ecoIndex, worstEcoIndex);
-            } else if (i === 1) {
-                // return value of last action
-                if (page.actions[page.actions.length - 1].ecoIndex) {
-                    return getWorstEcoIndex(page.actions[page.actions.length - 1].ecoIndex, worstEcoIndex);
-                }
-            }
-            return worstEcoIndex;
-        });
+        const firstEco = page.actions[0].ecoIndex;
+        worstFirst = getWorstEcoIndex(firstEco, worstFirst);
+
+        if (page.actions.length === 1) {
+            worstLast = getWorstEcoIndex(firstEco, worstLast);
+        } else {
+            const lastEco = page.actions[page.actions.length - 1].ecoIndex;
+            if (lastEco) worstLast = getWorstEcoIndex(lastEco, worstLast);
+        }
     });
 
-    return worstEcoIndexes.map((worstEcoIndex) => ({
-        ecoIndex: worstEcoIndex,
-        grade: getEcoIndexGrade(worstEcoIndex),
+    return [worstFirst, worstLast].map((ecoIndex) => ({
+        ecoIndex,
+        grade: getEcoIndexGrade(ecoIndex),
     }));
 }
 
 function getWorstEcoIndex(current, worst) {
-    if (!worst || worst > current) {
-        worst = current;
-    }
-    return worst;
+    return !worst || worst > current ? current : worst;
 }
 
 module.exports = {

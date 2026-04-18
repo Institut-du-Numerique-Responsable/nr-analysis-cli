@@ -143,6 +143,54 @@ const rules = [
         effort: 3,
         impact: 4,
     },
+    {
+        bestPractice: 'ModernImageFormats',
+        priority: 4,
+        effort: 3,
+        impact: 4,
+    },
+    {
+        bestPractice: 'OptimizeFonts',
+        priority: 3,
+        effort: 3,
+        impact: 3,
+    },
+    {
+        bestPractice: 'TrackingScripts',
+        priority: 5,
+        effort: 4,
+        impact: 5,
+    },
+    {
+        bestPractice: 'NoExternalIframes',
+        priority: 4,
+        effort: 4,
+        impact: 4,
+    },
+    {
+        bestPractice: 'NoAutoplayVideo',
+        priority: 4,
+        effort: 3,
+        impact: 4,
+    },
+    {
+        bestPractice: 'LazyLoadImages',
+        priority: 4,
+        effort: 2,
+        impact: 4,
+    },
+    {
+        bestPractice: 'NoExcessivePreload',
+        priority: 3,
+        effort: 3,
+        impact: 3,
+    },
+    {
+        bestPractice: 'NoRenderBlockingResources',
+        priority: 4,
+        effort: 3,
+        impact: 4,
+    },
 ];
 
 module.exports = rules;
