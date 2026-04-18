@@ -8,6 +8,54 @@ The tool simulates running the extension on specified pages opened in Chromium v
 
 ---
 
+## What's new — 2026 update
+
+This version brings a comprehensive refresh of eco-design rules and new CLI features, aligned with the state of the art of the web in 2026.
+
+### New CLI features
+
+| Feature | Description |
+| ------- | ----------- |
+| `--url <url>` | Directly analyze a URL without a YAML file — HTML report auto-saved to `~/Downloads/` |
+| `--recursive` | Automatically crawl internal links from a starting URL |
+| `--depth <n>` | Maximum crawl depth (default: 5) |
+| `--max_pages <n>` | Maximum number of pages to crawl and analyze (default: 200) |
+| `--language en` | Reports available in French and English |
+
+### Updated eco-design rules
+
+**8 new rules** covering modern best practices:
+
+| Rule | What it checks |
+| ---- | -------------- |
+| **Modern image formats** | Detects JPEG, PNG, GIF, BMP — recommends AVIF, WebP or **JPEG XL** (supported by all major browsers as of 2026) |
+| **Lazy loading for images & iframes** | Checks `loading="lazy"` on both `<img>` **and** `<iframe>` elements (native universal support) |
+| **Tracking scripts** | Detects 30+ tracking domains: Google, Meta, **TikTok Pixel**, **Snapchat Pixel**, **Pinterest Tag**, **Reddit Pixel**, OneTrust, Cookiebot, Klaviyo, Brevo… |
+| **Autoplay video/audio** | Flags any `<video>` or `<audio>` with the `autoplay` attribute |
+| **Font optimization** | Controls font file count (≤ 2) and total weight (≤ 100 KB) |
+| **Render-blocking resources** | Detects `<script>` tags in `<head>` without `async`, `defer`, or `type="module"` |
+| **External iframes** | Counts iframes pointing to third-party domains |
+| **Excessive preload/prefetch** | Flags more than 5 `<link rel="preload/prefetch">` directives |
+
+**6 existing rules improved:**
+
+| Rule | Improvement |
+| ---- | ----------- |
+| **Social network widgets** | X (Twitter) URLs updated, extended detection to X.com and LinkedIn badges |
+| **HTTP compression** | Documentation updated (Brotli recommended over gzip) |
+| **Browser plugins** | Extended to `<object>` and `<embed>` (Flash, Java, Silverlight all obsolete) |
+| **Modern formats** | FR/EN locales updated to mention 2026 support for all 3 formats |
+| **Lazy loading** | FR/EN locales reflect the extension to iframes |
+| **Tracking** | FR/EN locales include TikTok Pixel in examples |
+
+### Technical stack
+
+- **Puppeteer 23.9+** — modern headless Chromium, SSL error ignore, non-headless mode
+- **Node.js ES2020+** — CommonJS modules, native async/await
+- **Bilingual reports** — Mustache templates, full FR/EN i18n
+
+---
+
 # Summary
 
 - [Getting started](#getting-started)
