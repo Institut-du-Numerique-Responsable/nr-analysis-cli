@@ -48,7 +48,7 @@ async function crawlUrls(browser, startUrl, maxDepth, maxPages) {
         visited.add(url);
         result.push({ url });
 
-        if (depth < maxDepth) {
+        if (depth < maxDepth && result.length < maxPages) {
             const links = await extractInternalLinks(browser, url, origin);
             for (const link of links) {
                 if (!visited.has(link)) {

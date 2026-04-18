@@ -5,7 +5,7 @@ rulesManager.registerRule({
     detailComment: '',
 
     check: function (measures) {
-        const modernTypes = ['image/webp', 'image/avif'];
+        const modernTypes = ['image/avif', 'image/webp', 'image/jxl'];
         const legacyTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/bmp'];
         let total = 0;
         let modern = 0;

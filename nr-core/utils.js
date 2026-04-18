@@ -318,13 +318,21 @@ function isSvgOptimized(svgImage) {
 }
 
 function getOfficialSocialButtonFormUrl(url) {
-    if (url.includes('platform.twitter.com/widgets.js')) return 'tweeter';
-    if (url.includes('platform.linkedin.com/in.js')) return 'linkedin';
-    if (url.includes('assets.pinterest.com/js/pinit.js')) return 'pinterest';
-    if (url.includes('connect.facebook.net') && url.includes('sdk.js')) return 'facebook';
-    if (url.includes('platform-api.sharethis.com/js/sharethis.js')) return 'sharethis.com (mutliple social network) ';
-    if (url.includes('s7.addthis.com/js/300/addthis_widget.js')) return 'addthis.com (mutliple social network) ';
-    if (url.includes('static.addtoany.com/menu/page.js')) return 'addtoany.com (mutliple social network) ';
+    // X / Twitter (legacy and current widget SDK)
+    if (url.includes('platform.twitter.com/widgets.js')) return 'X (Twitter)';
+    if (url.includes('platform.x.com/widgets.js')) return 'X (Twitter)';
+    // LinkedIn
+    if (url.includes('platform.linkedin.com/in.js')) return 'LinkedIn';
+    if (url.includes('platform.linkedin.com/badges')) return 'LinkedIn';
+    // Pinterest
+    if (url.includes('assets.pinterest.com/js/pinit.js')) return 'Pinterest';
+    if (url.includes('assets.pinterest.com/js/pinit_main.js')) return 'Pinterest';
+    // Meta / Facebook
+    if (url.includes('connect.facebook.net') && url.includes('sdk.js')) return 'Facebook';
+    // Multi-network share widgets
+    if (url.includes('platform-api.sharethis.com/js/sharethis.js')) return 'ShareThis';
+    if (url.includes('s7.addthis.com/js/300/addthis_widget.js')) return 'AddThis';
+    if (url.includes('static.addtoany.com/menu/page.js')) return 'AddToAny';
     return '';
 }
 

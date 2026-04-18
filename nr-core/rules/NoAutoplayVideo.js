@@ -9,6 +9,7 @@ rulesManager.registerRule({
         if (count > 0) {
             this.complianceLevel = 'C';
             this.comment = chrome.i18n.getMessage('rule_NoAutoplayVideo_Comment', String(count));
+            this.detailComment = chrome.i18n.getMessage('rule_NoAutoplayVideo_DetailComment', String(count));
         }
     }
 }, 'frameMeasuresReceived');

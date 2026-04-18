@@ -101,8 +101,13 @@ function getAutoplayMediaCount() {
 
 function getLazyLoadStats() {
     const images = document.querySelectorAll('img');
+    const iframes = document.querySelectorAll('iframe[src]');
     const lazyImages = document.querySelectorAll('img[loading="lazy"]');
-    return { total: images.length, lazy: lazyImages.length };
+    const lazyIframes = document.querySelectorAll('iframe[src][loading="lazy"]');
+    return {
+        total: images.length + iframes.length,
+        lazy: lazyImages.length + lazyIframes.length,
+    };
 }
 
 function getPreloadCount() {

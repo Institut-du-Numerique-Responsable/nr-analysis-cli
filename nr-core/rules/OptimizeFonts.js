@@ -6,6 +6,12 @@ rulesManager.registerRule({
     fontCount: 0,
     totalFontSizeKo: 0,
 
+    initialize: function () {
+        this.fontCount = 0;
+        this.totalFontSizeKo = 0;
+        this.detailComment = '';
+    },
+
     check: function (measures) {
         const fontMimes = ['font/woff2', 'font/woff', 'font/ttf', 'font/otf',
             'application/font-woff', 'application/font-woff2', 'application/x-font-ttf'];
