@@ -9,15 +9,15 @@ if (!fs.existsSync(DIR)) {
 }
 
 const rules = glob.sync('./nr-core/rules/*.js');
+const wsgRules = glob.sync('./nr-core/rules/wsg/*.js');
 
-//One script to analyse them all
 concat(
     [
         './nr-core/analyseFrameCore.js',
         './nr-core/utils.js',
         './nr-core/rulesManager.js',
-        './nr-core/ecoIndex.js',
         ...rules,
+        ...wsgRules,
         './nr-core/greenpanel.js',
     ],
     './dist/nrBundle.js',
