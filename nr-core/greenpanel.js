@@ -31,17 +31,6 @@ function handleResponseFromBackground(frameMeasures) {
     measuresAcquisition.aggregateFrameMeasures(frameMeasures);
 }
 
-function computeEcoIndexMeasures(measures) {
-    measures.ecoIndex = computeEcoIndex(
-        measures.domSize,
-        measures.nbRequest,
-        Math.round(measures.responsesSize / 1000)
-    );
-    measures.waterConsumption = computeWaterConsumptionfromEcoIndex(measures.ecoIndex);
-    measures.greenhouseGasesEmission = computeGreenhouseGasesEmissionfromEcoIndex(measures.ecoIndex);
-    measures.grade = getEcoIndexGrade(measures.ecoIndex);
-}
-
 function launchAnalyse() {
     let now = Date.now();
 
@@ -73,10 +62,6 @@ function MeasuresAcquisition(rules) {
             nbRequest: 0,
             responsesSize: 0,
             responsesSizeUncompress: 0,
-            ecoIndex: 100,
-            grade: 'A',
-            waterConsumption: 0,
-            greenhouseGasesEmission: 0,
             pluginsNumber: 0,
             printStyleSheetsNumber: 0,
             inlineStyleSheetsNumber: 0,
@@ -102,7 +87,6 @@ function MeasuresAcquisition(rules) {
 
     this.aggregateFrameMeasures = function (frameMeasures) {
         measures.domSize += frameMeasures.domSize;
-        computeEcoIndexMeasures(measures);
 
         if (analyseBestPractices) {
             measures.pluginsNumber += frameMeasures.pluginsNumber;
@@ -168,8 +152,6 @@ function MeasuresAcquisition(rules) {
                 }
             });
             if (analyseBestPractices) localRulesChecker.sendEvent('harReceived', measures);
-
-            computeEcoIndexMeasures(measures);
         }
     };
 
@@ -203,33 +185,3 @@ function MeasuresAcquisition(rules) {
     }
 }
 
-/**
-Add to the history the result of an analyse
-**/
-function storeAnalysisInHistory() {
-    let measures = measuresAcquisition.getMeasures();
-    if (!measures) return;
-
-    var analyse_history = [];
-    var string_analyse_history = localStorage.getItem('analyse_history');
-    var analyse_to_store = {
-        resultDate: new Date(),
-        url: measures.url,
-        nbRequest: measures.nbRequest,
-        responsesSize: Math.round(measures.responsesSize / 1000),
-        domSize: measures.domSize,
-        greenhouseGasesEmission: measures.greenhouseGasesEmission,
-        waterConsumption: measures.waterConsumption,
-        ecoIndex: measures.ecoIndex,
-        grade: measures.grade,
-    };
-
-    if (string_analyse_history) {
-        analyse_history = JSON.parse(string_analyse_history);
-        analyse_history.reverse();
-        analyse_history.push(analyse_to_store);
-        analyse_history.reverse();
-    } else analyse_history.push(analyse_to_store);
-
-    localStorage.setItem('analyse_history', JSON.stringify(analyse_history));
-}
