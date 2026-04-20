@@ -4,6 +4,8 @@ const path = require('path');
 const { harFromMessages } = require('chrome-har');
 const sizes = require('../sizes.js');
 const { createProgressBar } = require('./utils');
+const { checkGreenHosting, computeCo2 } = require('./co2Client');
+const { computeScore } = require('./scoring');
 
 const SUBRESULTS_DIRECTORY = path.join(__dirname, '../results');
 
@@ -319,6 +321,42 @@ async function login(browser, loginInformations, options) {
     await waitPageLoading(page, loginInformations, options.timeout);
 }
 
+async function enrichResultsWithScoring(results) {
+    if (!results.success) return;
+
+    const domain = results.pageInformations.url
+        .replace(/^https?:\/\//, '')
+        .split('/')[0];
+    const greenHostingResult = await checkGreenHosting(domain);
+
+    results.pages.forEach((page) => {
+        page.actions.forEach((action) => {
+            if (!action.bestPractices) return;
+
+            action.bestPractices.GreenHosting = greenHostingResult;
+            const isGreen = greenHostingResult.complianceLevel === 'A';
+            const co2 = computeCo2(action.responsesSize || 0, isGreen);
+            action.bestPractices.Co2PerVisit = co2.result;
+            action.co2PerVisit = co2.value;
+
+            const scoring = computeScore(action.bestPractices);
+            action.sustainabilityScore = scoring.score;
+            action.sustainabilityGrade = scoring.grade;
+            action.scoreByCategory = scoring.byCategory;
+        });
+
+        const lastAction = page.actions[page.actions.length - 1];
+        page.sustainabilityScore = lastAction.sustainabilityScore;
+        page.sustainabilityGrade = lastAction.sustainabilityGrade;
+        page.scoreByCategory = lastAction.scoreByCategory;
+        page.co2PerVisit = lastAction.co2PerVisit;
+    });
+
+    const lastPage = results.pages[results.pages.length - 1];
+    results.sustainabilityScore = lastPage.sustainabilityScore;
+    results.sustainabilityGrade = lastPage.sustainabilityGrade;
+}
+
 async function createJsonReports(browser, pagesInformations, options, proxy, headers, translator) {
     const TIMEOUT = options.timeout;
     const MAX_TAB = options.max_tab;
@@ -398,6 +436,8 @@ async function createJsonReports(browser, pagesInformations, options, proxy, hea
             );
             continue;
         }
+
+        await enrichResultsWithScoring(results);
 
         const filePath = path.resolve(SUBRESULTS_DIRECTORY, `${resultId}.json`);
         writeList.push(fs.promises.writeFile(filePath, JSON.stringify(results)));
