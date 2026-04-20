@@ -17,9 +17,9 @@ async function checkGreenHosting(domain) {
     }
 }
 
-function computeCo2(responsesSizeBytes) {
+function computeCo2(responsesSizeBytes, isGreen = false) {
     const bytes = responsesSizeBytes || 0;
-    const grams = co2Calculator.perVisit(bytes, false);
+    const grams = co2Calculator.perVisit(bytes, isGreen);
     const rounded = Math.round(grams * 100) / 100;
     let complianceLevel = 'C';
     if (rounded <= CO2_THRESHOLDS.A) complianceLevel = 'A';
