@@ -45,8 +45,19 @@ function getGradeEcoIndex(grade) {
     return 0;
 }
 
+function scoreToGrade(score) {
+    if (score >= 90) return 'A';
+    if (score >= 75) return 'B';
+    if (score >= 60) return 'C';
+    if (score >= 45) return 'D';
+    if (score >= 30) return 'E';
+    if (score >= 15) return 'F';
+    return 'G';
+}
+
 module.exports = {
     createProgressBar,
     getEcoIndexGrade,
     getGradeEcoIndex,
+    scoreToGrade,
 };

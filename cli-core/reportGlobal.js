@@ -1,19 +1,30 @@
 const fs = require('fs');
 const path = require('path');
-const { getEcoIndexGrade, getGradeEcoIndex, createProgressBar } = require('./utils');
+const { createProgressBar, scoreToGrade } = require('./utils');
 
 const SUBRESULTS_DIRECTORY = path.join(__dirname, '../results');
 
-// Insert-sort `obj` into `table`, ascending by ecoIndex, capped at `number` entries.
+// Converts a compliance letter grade to a numeric weight for worst-rule sorting.
+function gradeToWeight(grade) {
+    if (grade == 'A') return 75;
+    if (grade == 'B') return 65;
+    if (grade == 'C') return 50;
+    if (grade == 'D') return 35;
+    if (grade == 'E') return 20;
+    if (grade == 'F') return 5;
+    return 0;
+}
+
+// Insert-sort `obj` into `table`, descending by sustainabilityScore, capped at `number` entries.
 function worstPagesHandler(number) {
     return (obj, table) => {
         const entry = {
             nb: obj.nb,
             url: obj.pageInformations.url,
-            grade: obj.grade,
-            ecoIndex: obj.ecoIndex,
+            grade: obj.sustainabilityGrade || 'G',
+            score: obj.sustainabilityScore || 0,
         };
-        let index = table.findIndex((item) => obj.ecoIndex < item.ecoIndex);
+        let index = table.findIndex((item) => (obj.sustainabilityScore || 0) > item.score);
         if (index === -1) index = table.length;
         table.splice(index, 0, entry);
         if (table.length > number) table.pop();
@@ -46,8 +57,7 @@ async function create_global_report(reports, options, translator) {
         'Creating global report ...'
     );
 
-    let eco = 0; // running sum, turned into an average below
-    const worstEcoIndexes = [null, null];
+    let scoreSum = 0; // running sum, turned into an average below
     const err = [];
     const worstPages = [];
     const bestPracticesTotal = {};
@@ -67,36 +77,29 @@ async function create_global_report(reports, options, translator) {
         obj.nb = parseInt(file.name);
 
         if (obj.success) {
-            eco += obj.ecoIndex;
-            const pageWorstEcoIndexes = getWorstEcoIndexes(obj);
-            [0, 1].forEach((i) => {
-                if (!worstEcoIndexes[i] || worstEcoIndexes[i].ecoIndex > pageWorstEcoIndexes[i].ecoIndex) {
-                    worstEcoIndexes[i] = { ...pageWorstEcoIndexes[i] };
-                }
-            });
-
+            scoreSum += obj.sustainabilityScore || 0;
             nbBestPracticesToCorrect += obj.nbBestPracticesToCorrect;
             handleWorstPages(obj, worstPages);
             obj.pages.forEach((page) => {
                 if (!page.bestPractices) return;
                 for (const key in page.bestPractices) {
                     bestPracticesTotal[key] = bestPracticesTotal[key] || 0;
-                    bestPracticesTotal[key] += getGradeEcoIndex(page.bestPractices[key].complianceLevel || 'A');
+                    bestPracticesTotal[key] += gradeToWeight(page.bestPractices[key].complianceLevel || 'A');
                 }
             });
         } else {
             err.push({
                 nb: obj.nb,
                 url: obj.pageInformations.url,
-                grade: obj.grade,
-                ecoIndex: obj.ecoIndex,
+                grade: obj.sustainabilityGrade || 'G',
+                score: obj.sustainabilityScore || 0,
             });
         }
         if (progressBar) progressBar.tick();
     });
 
     const nbSuccessful = reports.length - err.length;
-    const averageEco = nbSuccessful > 0 ? Math.round(eco / nbSuccessful) : 'No data';
+    const averageScore = nbSuccessful > 0 ? Math.round(scoreSum / nbSuccessful) : 0;
 
     const date = new Date();
     const globalSheet_data = {
@@ -104,9 +107,8 @@ async function create_global_report(reports, options, translator) {
         hostname,
         device: DEVICE,
         connection: translator.translate(options.mobile ? 'mobile' : 'wired'),
-        grade: getEcoIndexGrade(averageEco),
-        ecoIndex: averageEco,
-        worstEcoIndexes,
+        grade: scoreToGrade(averageScore),
+        sustainabilityScore: averageScore,
         nbScenarios: reports.length,
         timeout: parseInt(TIMEOUT),
         maxTab: parseInt(MAX_TAB),
@@ -134,32 +136,6 @@ async function create_global_report(reports, options, translator) {
     };
 }
 
-// Returns [worstFirstAction, worstLastAction]. When a page has a single action, both slots use it.
-function getWorstEcoIndexes(obj) {
-    let worstFirst = null;
-    let worstLast = null;
-
-    obj.pages.forEach((page) => {
-        const firstEco = page.actions[0].ecoIndex;
-        worstFirst = getWorstEcoIndex(firstEco, worstFirst);
-
-        if (page.actions.length === 1) {
-            worstLast = getWorstEcoIndex(firstEco, worstLast);
-        } else {
-            const lastEco = page.actions[page.actions.length - 1].ecoIndex;
-            if (lastEco) worstLast = getWorstEcoIndex(lastEco, worstLast);
-        }
-    });
-
-    return [worstFirst, worstLast].map((ecoIndex) => ({
-        ecoIndex,
-        grade: getEcoIndexGrade(ecoIndex),
-    }));
-}
-
-function getWorstEcoIndex(current, worst) {
-    return !worst || worst > current ? current : worst;
-}
 
 module.exports = {
     create_global_report,
