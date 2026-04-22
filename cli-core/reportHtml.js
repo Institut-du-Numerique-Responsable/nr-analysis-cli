@@ -22,40 +22,7 @@ const cssBestPractices = {
     B: 'close-warning',
     C: 'close-error',
 };
-const bestPracticesKey = [
-    'AddExpiresOrCacheControlHeaders',
-    'CompressHttp',
-    'DomainsNumber',
-    'DontResizeImageInBrowser',
-    'EmptySrcTag',
-    'ExternalizeCss',
-    'ExternalizeJs',
-    'HttpError',
-    'HttpRequests',
-    'ImageDownloadedNotDisplayed',
-    'JsValidate',
-    'MaxCookiesLength',
-    'MinifiedCss',
-    'MinifiedJs',
-    'NoCookieForStaticRessources',
-    'NoRedirect',
-    'OptimizeBitmapImages',
-    'OptimizeSvg',
-    'Plugins',
-    'PrintStyleSheet',
-    'SocialNetworkButton',
-    'StyleSheets',
-    'UseETags',
-    'UseStandardTypefaces',
-    'ModernImageFormats',
-    'OptimizeFonts',
-    'TrackingScripts',
-    'NoExternalIframes',
-    'NoAutoplayVideo',
-    'LazyLoadImages',
-    'NoExcessivePreload',
-    'NoRenderBlockingResources',
-];
+const bestPracticesKey = rules.map((r) => r.bestPractice);
 
 //create html report for all the analysed pages and recap on the first sheet
 async function create_html_report(reportObject, options, translator, grafanaLinkPresent) {
@@ -72,7 +39,7 @@ async function create_html_report(reportObject, options, translator, grafanaLink
     );
 
     // Read all reports
-    const { allReportsVariables, waterTotal, greenhouseGasesEmissionTotal } = readAllReports(
+    const { allReportsVariables, co2Total } = readAllReports(
         fileList,
         options.grafana_link,
         translator
@@ -82,8 +49,7 @@ async function create_html_report(reportObject, options, translator, grafanaLink
     const globalReportVariables = readGlobalReport(
         globalReport.path,
         allReportsVariables,
-        waterTotal,
-        greenhouseGasesEmissionTotal,
+        co2Total,
         grafanaLinkPresent,
         translator
     );
@@ -104,8 +70,7 @@ async function create_html_report(reportObject, options, translator, grafanaLink
 function readAllReports(fileList, grafanaLink, translator) {
     // init variables
     const allReportsVariables = [];
-    let waterTotal = 0;
-    let greenhouseGasesEmissionTotal = 0;
+    let co2Total = 0;
 
     // Read all json files
     fileList.forEach((file) => {
@@ -142,10 +107,9 @@ function readAllReports(fileList, grafanaLink, translator) {
                 page.actions.forEach((action) => {
                     const res = {};
                     res.name = action.name;
-                    res.ecoIndex = action.ecoIndex;
-                    res.grade = action.grade;
-                    res.waterConsumption = action.waterConsumption;
-                    res.greenhouseGasesEmission = action.greenhouseGasesEmission;
+                    res.sustainabilityScore = action.sustainabilityScore || 0;
+                    res.sustainabilityGrade = action.sustainabilityGrade || 'G';
+                    res.co2PerVisit = action.co2PerVisit || 0;
                     res.nbRequest = action.nbRequest;
                     res.domSize = action.domSize;
                     res.responsesSize = action.responsesSize / 1000;
@@ -156,15 +120,14 @@ function readAllReports(fileList, grafanaLink, translator) {
                 analyzePage.actions = actions;
 
                 const lastAction = actions[actions.length - 1];
-                analyzePage.lastEcoIndex = lastAction.ecoIndex;
-                analyzePage.lastGrade = lastAction.grade;
-                analyzePage.deltaEcoIndex = actions[0].ecoIndex - lastAction.ecoIndex;
-                analyzePage.waterConsumption = lastAction.waterConsumption;
-                analyzePage.greenhouseGasesEmission = lastAction.greenhouseGasesEmission;
+                analyzePage.lastScore = lastAction.sustainabilityScore || 0;
+                analyzePage.lastGrade = lastAction.sustainabilityGrade || 'G';
+                analyzePage.deltaScore = (actions[0].sustainabilityScore || 0) - (lastAction.sustainabilityScore || 0);
+                analyzePage.co2PerVisit = lastAction.co2PerVisit || 0;
                 analyzePage.domSize = lastAction.domSize;
                 analyzePage.nbRequest = lastAction.nbRequest;
-                analyzePage.ecoIndex = lastAction.ecoIndex;
-                analyzePage.grade = lastAction.grade;
+                analyzePage.sustainabilityScore = lastAction.sustainabilityScore || 0;
+                analyzePage.grade = lastAction.sustainabilityGrade || 'G';
 
                 // update total page measure
                 nbRequestTotal += lastAction.nbRequest;
@@ -193,12 +156,7 @@ function readAllReports(fileList, grafanaLink, translator) {
                     }
                 });
 
-                if (analyzePage.waterConsumption) {
-                    waterTotal += analyzePage.waterConsumption;
-                }
-                if (analyzePage.greenhouseGasesEmission) {
-                    greenhouseGasesEmissionTotal += analyzePage.greenhouseGasesEmission;
-                }
+                co2Total += analyzePage.co2PerVisit || 0;
                 analyzePage.bestPractices = pageBestPractices;
                 analyzePage.nbBestPracticesToCorrect = nbBestPracticesToCorrect;
                 analyzePage.nbBestPracticesToCorrectLabel = translator.translateWithArgs(
@@ -220,9 +178,9 @@ function readAllReports(fileList, grafanaLink, translator) {
                 link: `<a href="${escapeHtml(pageFilename)}">${scenarioNameHtml}</a>`,
                 filename: pageFilename,
                 header: `${escapeHtml(translator.translate('nrAnalysisReport'))} > <a class="text-white" href="${escapeHtml(report_data.pageInformations.url)}">${scenarioNameHtml}</a>`,
-                bigEcoIndex: `${report_data.ecoIndex} <span class="grade big-grade ${report_data.grade}">${report_data.grade}</span>`,
-                smallEcoIndex: `${report_data.ecoIndex} <span class="grade ${report_data.grade}">${report_data.grade}</span>`,
-                grade: report_data.grade,
+                bigScore: `${report_data.sustainabilityScore} <span class="grade big-grade ${report_data.sustainabilityGrade || 'G'}">${report_data.sustainabilityGrade || 'G'}</span>`,
+                smallScore: `${report_data.sustainabilityScore} <span class="grade ${report_data.sustainabilityGrade || 'G'}">${report_data.sustainabilityGrade || 'G'}</span>`,
+                grade: report_data.sustainabilityGrade || 'G',
                 nbRequest: nbRequestTotal,
                 responsesSize: Math.round(responsesSizeTotal * 1000) / 1000,
                 pageSize: `${Math.round(responsesSizeTotal)} (${Math.round(responsesSizeUncompressTotal / 1000)})`,
@@ -247,32 +205,24 @@ function readAllReports(fileList, grafanaLink, translator) {
         allReportsVariables.push(reportVariables);
     });
 
-    return { allReportsVariables, waterTotal, greenhouseGasesEmissionTotal };
+    return { allReportsVariables, co2Total };
 }
 
 /**
  * Read and generate data for global template
  * @param {*} path
  * @param {*} allReportsVariables
- * @param {*} waterTotal
- * @param {*} greenhouseGasesEmissionTotal
+ * @param {*} co2Total
  * @param {*} grafanaLinkPresent
  * @returns
  */
-function readGlobalReport(
-    path,
-    allReportsVariables,
-    waterTotal,
-    greenhouseGasesEmissionTotal,
-    grafanaLinkPresent,
-    translator
-) {
+function readGlobalReport(path, allReportsVariables, co2Total, grafanaLinkPresent, translator) {
     const globalReport_data = JSON.parse(fs.readFileSync(path).toString());
 
-    let ecoIndex = '';
-    (globalReport_data.worstEcoIndexes || []).forEach((worstEcoIndex) => {
-        const separator = ecoIndex === '' ? '' : '/';
-        ecoIndex = `${ecoIndex} ${separator} ${worstEcoIndex.ecoIndex} <span class="grade big-grade ${worstEcoIndex.grade}">${worstEcoIndex.grade}</span>`;
+    let worstScores = '';
+    (globalReport_data.worstPages || []).forEach((worstPage) => {
+        const separator = worstScores === '' ? '' : '/';
+        worstScores = `${worstScores} ${separator} ${worstPage.score} <span class="grade big-grade ${worstPage.grade}">${worstPage.grade}</span>`;
     });
 
     const globalReportVariables = {
@@ -280,11 +230,10 @@ function readGlobalReport(
         hostname: globalReport_data.hostname,
         device: globalReport_data.device,
         connection: globalReport_data.connection,
-        ecoIndex: ecoIndex,
+        sustainabilityScore: worstScores,
         grade: globalReport_data.grade,
         nbScenarios: globalReport_data.nbScenarios,
-        waterTotal: Math.round(waterTotal * 100) / 100,
-        greenhouseGasesEmissionTotal: Math.round(greenhouseGasesEmissionTotal * 100) / 100,
+        co2Total: Math.round(co2Total * 100) / 100,
         nbErrors: globalReport_data.errors.length,
         allReportsVariables,
         bestsPractices: constructBestPracticesGlobal(allReportsVariables, translator),
@@ -381,10 +330,9 @@ const GLOBAL_LABEL_KEYS = [
     'errors',
     'error',
     'scenario',
-    'ecoIndex',
+    'sustainabilityScore',
     'shareDueToActions',
-    'greenhouseGasesEmission',
-    'water',
+    'co2PerVisit',
     'bestPracticesToImplement',
     'bestPractices',
     'priority',
@@ -399,7 +347,7 @@ const GLOBAL_LABEL_KEYS = [
 ];
 
 const GLOBAL_TOOLTIP_KEYS = [
-    ['ecoIndex', 'tooltip_ecoIndex'],
+    ['sustainabilityScore', 'tooltip_ecoIndex'],
     ['shareDueToActions', 'tooltip_shareDueToActions'],
     ['bestPracticesToImplement', 'tooltip_bestPracticesToImplement'],
 ];
@@ -410,9 +358,8 @@ const PAGE_LABEL_KEYS = [
     'domSize',
     'steps',
     'step',
-    'ecoIndex',
-    'water',
-    'greenhouseGasesEmission',
+    'sustainabilityScore',
+    'co2PerVisit',
     'bestPractices',
     'bestPractice',
     'result',

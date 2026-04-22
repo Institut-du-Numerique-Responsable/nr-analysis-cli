@@ -27,7 +27,7 @@ async function create_XLSX_report(reportObject, options, translator) {
         [translator.translate('platform'), globalReport_data.device],
         [translator.translate('connection'), globalReport_data.connection],
         [translator.translate('grade'), globalReport_data.grade],
-        [translator.translate('ecoIndex'), globalReport_data.ecoIndex],
+        [translator.translate('sustainabilityScore'), globalReport_data.sustainabilityScore],
         [translator.translate('nbPages'), globalReport_data.nbPages],
         [translator.translate('timeout'), globalReport_data.timeout],
         [translator.translate('nbConcAnalysis'), globalReport_data.maxTab],
@@ -45,8 +45,8 @@ async function create_XLSX_report(reportObject, options, translator) {
             element.url,
             translator.translate('grade'),
             element.grade,
-            translator.translate('ecoIndex'),
-            element.ecoIndex,
+            translator.translate('sustainabilityScore'),
+            element.score,
         ]);
     });
     globalSheet_data.push([], [translator.translate('rulesToApply')]);
@@ -75,13 +75,9 @@ async function create_XLSX_report(reportObject, options, translator) {
                     // Prepare data
                     sheet_data = [
                         [translator.translate('url'), obj.pageInformations.url],
-                        [translator.translate('grade'), page.actions[page.actions.length - 1].grade],
-                        [translator.translate('ecoIndex'), page.actions[page.actions.length - 1].ecoIndex],
-                        [translator.translate('water'), page.actions[page.actions.length - 1].waterConsumption],
-                        [
-                            translator.translate('greenhouseGasesEmission'),
-                            page.actions[page.actions.length - 1].greenhouseGasesEmission,
-                        ],
+                        [translator.translate('grade'), page.actions[page.actions.length - 1].sustainabilityGrade || 'G'],
+                        [translator.translate('sustainabilityScore'), page.actions[page.actions.length - 1].sustainabilityScore],
+                        [translator.translate('co2PerVisit'), page.actions[page.actions.length - 1].co2PerVisit],
                         [translator.translate('domSize'), page.actions[page.actions.length - 1].domSize],
                         [
                             translator.translate('pageSize'),
@@ -122,17 +118,16 @@ async function create_XLSX_report(reportObject, options, translator) {
                 sheet.getCell('B2').fill = {
                     type: 'pattern',
                     pattern: 'solid',
-                    fgColor: { argb: getGradeColor(obj.grade) },
+                    fgColor: { argb: getGradeColor(obj.sustainabilityGrade || 'G') },
                 };
             });
         } else {
             // Prepare data
             const sheet_data = [
                 [translator.translate('url'), obj.pageInformations.url],
-                [translator.translate('grade'), obj.grade],
-                [translator.translate('ecoIndex'), obj.ecoIndex],
-                [translator.translate('water'), obj.waterConsumption],
-                [translator.translate('greenhouseGasesEmission'), obj.greenhouseGasesEmission],
+                [translator.translate('grade'), obj.sustainabilityGrade || 'G'],
+                [translator.translate('sustainabilityScore'), obj.sustainabilityScore],
+                [translator.translate('co2PerVisit'), obj.co2PerVisit],
                 [translator.translate('domSize'), obj.domSize],
                 [
                     translator.translate('pageSize'),
@@ -151,7 +146,7 @@ async function create_XLSX_report(reportObject, options, translator) {
             sheet.getCell('B2').fill = {
                 type: 'pattern',
                 pattern: 'solid',
-                fgColor: { argb: getGradeColor(obj.grade) },
+                fgColor: { argb: getGradeColor(obj.sustainabilityGrade || 'G') },
             };
         }
         if (progressBar) progressBar.tick();
