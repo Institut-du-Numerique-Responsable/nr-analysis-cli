@@ -188,9 +188,8 @@
                         <table id="tabBestPractices" class="table table-sm">
                             <thead class="table-light">
                                 <th scope="col">{{ labels.step }}</th>
-                                <th scope="col">{{ labels.ecoIndex }}</th>
-                                <th scope="col">{{ labels.water }}</th>
-                                <th scope="col">{{ labels.greenhouseGasesEmission }}</th>
+                                <th scope="col">{{ labels.sustainabilityScore }}</th>
+                                <th scope="col">{{ labels.co2PerVisit }}</th>
                                 <th scope="col">{{ labels.domSize }}</th>
                                 <th scope="col">{{ labels.requests }}</th>
                                 <th scope="col">{{ labels.pageSize }}</th>
@@ -199,31 +198,30 @@
                                 {{#values.pages}}
                                 <!-- Empty line -->
                                 <tr class="pageRow">
-                                    <td colspan="7"><b>{{ name }} - {{ url }}</b></td>
+                                    <td colspan="6"><b>{{ name }} - {{ url }}</b></td>
                                 </tr>
                                 {{#actions}}
                                 <tr>
                                     <td>{{ name }}</td>
                                     <td>
-                                        {{ ecoIndex }}
-                                        <span class="grade {{grade}}">{{grade}}</span>
+                                        {{ sustainabilityScore }}
+                                        <span class="grade {{sustainabilityGrade}}">{{sustainabilityGrade}}</span>
                                     </td>
-                                    <td>{{ waterConsumption }}</td>
-                                    <td>{{ greenhouseGasesEmission }}</td>
+                                    <td>{{ co2PerVisit }}</td>
                                     <td>{{ domSize }}</td>
                                     <td>{{ nbRequest }}</td>
                                     <td>{{ responsesSize }}</td>
                                 </tr>
                                 {{/actions}}
                                 <tr class="collapseRow">
-                                    <td colspan="7">
+                                    <td colspan="6">
                                         <a data-bs-toggle="collapse" href="#rule_{{ id }}" role="button" aria-expanded="false" aria-controls="rule_{{ id }}">
                                             {{ nbBestPracticesToCorrectLabel }}
                                         </a>
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td colspan="7" class="hiddenRow">
+                                    <td colspan="6" class="hiddenRow">
                                         <table id="rule_{{ id }}" class="collapse table table-sm">
                                             <thead class="table-light">
                                                 <th scope="col">{{ labels.bestPractice }}</th>
@@ -260,7 +258,7 @@
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td colspan="7"></td>
+                                    <td colspan="6"></td>
                                 </tr>
                                 {{/values.pages}}
                             </tbody>

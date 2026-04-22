@@ -217,9 +217,9 @@
                                 <th scope="col" class="col col-md-1">
                                     <button
                                         class="btn-primary bi bi-info rounded-circle"
-                                        onclick='alert("{{ tooltips.ecoIndex }}");'>
+                                        onclick='alert("{{ tooltips.sustainabilityScore }}");'>
                                     </button>
-                                    &nbsp;{{ labels.ecoIndex }}
+                                    &nbsp;{{ labels.sustainabilityScore }}
                                 </th>
                                 <th scope="col" class="col col-md-1">
                                     <button
@@ -228,8 +228,7 @@
                                     </button>
                                     &nbsp;{{ labels.shareDueToActions }}
                                 </th>
-                                <th scope="col" class="col col-md-1">{{ labels.water }}</th>
-                                <th scope="col" class="col col-md-1">{{ labels.greenhouseGasesEmission }}</th>
+                                <th scope="col" class="col col-md-1">{{ labels.co2PerVisit }}</th>
                                 <th scope="col" class="col col-md-2">
                                     <button
                                         class="btn-primary bi bi-info rounded-circle"
@@ -244,7 +243,7 @@
                             <tbody class="text-center">
                                 {{#values.allReportsVariables}}
                                     <tr class="{{ cssRowError }} text-start">
-                                        <td colspan="6">{{{ link }}}</td>
+                                        <td colspan="5">{{{ link }}}</td>
                                     </tr>
                                     {{#pages}}
                                     <tr class="pageRow {{ cssRowError }}">
@@ -254,11 +253,10 @@
                                         {{/success}}
                                         {{#success}}
                                         <td class="col col-md-1">
-                                            {{{ lastEcoIndex }}}&nbsp;<span class="grade {{ lastGrade }}">{{ lastGrade }}</span>
+                                            {{ lastScore }}&nbsp;<span class="grade {{ lastGrade }}">{{ lastGrade }}</span>
                                         </td>
-                                        <td class="col col-md-1">{{ deltaEcoIndex }}</td>
-                                        <td class="col col-md-1">{{ waterConsumption }}</td>
-                                        <td class="col col-md-1">{{ greenhouseGasesEmission }}</td>
+                                        <td class="col col-md-1">{{ deltaScore }}</td>
+                                        <td class="col col-md-1">{{ co2PerVisit }}</td>
                                         <td class="col col-md-2">{{ nbBestPracticesToCorrect }}</td>
                                         {{#values.grafanaLinkPresent}}
                                         <td class="col col-md-1">
