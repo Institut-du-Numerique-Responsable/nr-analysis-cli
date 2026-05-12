@@ -3,6 +3,8 @@ const path = require('path');
 const Mustache = require('mustache');
 const rules = require('../conf/rules');
 const utils = require('./utils');
+const { getSeverity } = require('./serverAudit');
+const { describe } = require('./checkDescriptions');
 
 const HTML_ESCAPES = {
     '&': '&amp;',
@@ -15,6 +17,17 @@ const HTML_ESCAPES = {
 function escapeHtml(str) {
     return String(str).replace(/[&<>"']/g, (c) => HTML_ESCAPES[c]);
 }
+
+function formatNumber(n) {
+    return new Intl.NumberFormat('fr-FR').format(n);
+}
+
+const SEVERITY_LABELS = {
+    critical: 'Critique',
+    important: 'Important',
+    recommended: 'Recommandé',
+    info: 'Informatif',
+};
 
 // CSS class for each best-practice compliance level
 const cssBestPractices = {
@@ -42,7 +55,8 @@ async function create_html_report(reportObject, options, translator, grafanaLink
     const { allReportsVariables, co2Total } = readAllReports(
         fileList,
         options.grafana_link,
-        translator
+        translator,
+        options.reportPrefix
     );
 
     // Read global report
@@ -51,7 +65,8 @@ async function create_html_report(reportObject, options, translator, grafanaLink
         allReportsVariables,
         co2Total,
         grafanaLinkPresent,
-        translator
+        translator,
+        options.reportPrefix
     );
 
     // write global report
@@ -67,7 +82,7 @@ async function create_html_report(reportObject, options, translator, grafanaLink
  * @param {*} fileList
  * @returns
  */
-function readAllReports(fileList, grafanaLink, translator) {
+function readAllReports(fileList, grafanaLink, translator, reportPrefix) {
     // init variables
     const allReportsVariables = [];
     let co2Total = 0;
@@ -80,9 +95,10 @@ function readAllReports(fileList, grafanaLink, translator) {
         const hostname = report_data.pageInformations.url.split('/')[2];
         const scenarioName = report_data.pageInformations.name || report_data.pageInformations.url;
         const scenarioNameHtml = escapeHtml(scenarioName);
+        const prefix = reportPrefix ? `${reportPrefix}_` : '';
         const pageFilename = report_data.pageInformations.name
-            ? `${removeForbiddenCharacters(report_data.pageInformations.name)}.html`
-            : `${report_data.index}.html`;
+            ? `${prefix}${removeForbiddenCharacters(report_data.pageInformations.name)}.html`
+            : `${prefix}${report_data.index}.html`;
 
         if (report_data.success) {
             let pages = [];
@@ -109,7 +125,12 @@ function readAllReports(fileList, grafanaLink, translator) {
                     res.name = action.name;
                     res.sustainabilityScore = action.sustainabilityScore || 0;
                     res.sustainabilityGrade = action.sustainabilityGrade || 'G';
+                    res.socialScore = action.socialScore || 0;
+                    res.socialGrade = action.socialGrade || 'G';
                     res.co2PerVisit = action.co2PerVisit || 0;
+                    res.co2Per1M = action.co2Per1M || 0;
+                    res.waterPer1M = action.waterPer1M || 0;
+                    res.energyPer1M = action.energyPer1M || 0;
                     res.nbRequest = action.nbRequest;
                     res.domSize = action.domSize;
                     res.responsesSize = action.responsesSize / 1000;
@@ -124,6 +145,11 @@ function readAllReports(fileList, grafanaLink, translator) {
                 analyzePage.lastGrade = lastAction.sustainabilityGrade || 'G';
                 analyzePage.deltaScore = (actions[0].sustainabilityScore || 0) - (lastAction.sustainabilityScore || 0);
                 analyzePage.co2PerVisit = lastAction.co2PerVisit || 0;
+                analyzePage.co2Per1M = lastAction.co2Per1M || 0;
+                analyzePage.waterPer1M = lastAction.waterPer1M || 0;
+                analyzePage.energyPer1M = lastAction.energyPer1M || 0;
+                analyzePage.socialScore = lastAction.socialScore || 0;
+                analyzePage.socialGrade = lastAction.socialGrade || 'G';
                 analyzePage.domSize = lastAction.domSize;
                 analyzePage.nbRequest = lastAction.nbRequest;
                 analyzePage.sustainabilityScore = lastAction.sustainabilityScore || 0;
@@ -157,6 +183,12 @@ function readAllReports(fileList, grafanaLink, translator) {
                 });
 
                 co2Total += analyzePage.co2PerVisit || 0;
+                analyzePage.a11ySummary = page.a11ySummary || { pass: 0, warn: 0, fail: 0, total: 0 };
+                analyzePage.a11yIssues = (page.a11yIssues || []).map((iss) => ({
+                    id: iss.id,
+                    description: describe(iss.id),
+                    examples: (iss.examples || []).map(escapeHtml),
+                }));
                 analyzePage.bestPractices = pageBestPractices;
                 analyzePage.nbBestPracticesToCorrect = nbBestPracticesToCorrect;
                 analyzePage.nbBestPracticesToCorrectLabel = translator.translateWithArgs(
@@ -170,17 +202,51 @@ function readAllReports(fileList, grafanaLink, translator) {
             // Manage state of global best practices, for each page of the scenario
             const bestPractices = manageScenarioBestPratices(pages, translator);
 
+            const lastPage = report_data.pages[report_data.pages.length - 1] || {};
+            const buildCheck = ([id, r]) => ({
+                id,
+                comment: r.comment,
+                note: cssBestPractices[r.complianceLevel] || 'checkmark-success',
+                severity: getSeverity(id),
+                severityLabel: SEVERITY_LABELS[getSeverity(id)] || getSeverity(id),
+                description: describe(id),
+            });
+            const securityChecks = report_data.security ? Object.entries(report_data.security).map(buildCheck) : [];
+            const serverChecks = report_data.server ? Object.entries(report_data.server).map(buildCheck) : [];
+            const severityOrder = { critical: 0, important: 1, recommended: 2, info: 3 };
+            securityChecks.sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity]);
+            serverChecks.sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity]);
             reportVariables = {
                 date: report_data.date,
                 success: report_data.success,
                 cssRowError: '',
                 name: scenarioName,
+                url: report_data.pageInformations.url,
                 link: `<a href="${escapeHtml(pageFilename)}">${scenarioNameHtml}</a>`,
                 filename: pageFilename,
                 header: `${escapeHtml(translator.translate('nrAnalysisReport'))} > <a class="text-white" href="${escapeHtml(report_data.pageInformations.url)}">${scenarioNameHtml}</a>`,
                 bigScore: `${report_data.sustainabilityScore} <span class="grade big-grade ${report_data.sustainabilityGrade || 'G'}">${report_data.sustainabilityGrade || 'G'}</span>`,
                 smallScore: `${report_data.sustainabilityScore} <span class="grade ${report_data.sustainabilityGrade || 'G'}">${report_data.sustainabilityGrade || 'G'}</span>`,
                 grade: report_data.sustainabilityGrade || 'G',
+                sustainabilityScore: report_data.sustainabilityScore || 0,
+                socialScore: report_data.socialScore || 0,
+                socialGrade: report_data.socialGrade || 'G',
+                securityScore: report_data.securityScore || 0,
+                securityGrade: report_data.securityGrade || 'G',
+                securitySummary: report_data.securitySummary || { pass: 0, warn: 0, fail: 0, total: 0 },
+                securityChecks,
+                serverScore: report_data.serverScore || 0,
+                serverGrade: report_data.serverGrade || 'G',
+                serverSummary: report_data.serverSummary || { pass: 0, warn: 0, fail: 0, total: 0 },
+                serverChecks,
+                co2PerVisit: lastPage.co2PerVisit || 0,
+                waterClPerVisit: report_data.waterClPerVisit || 0,
+                energyWhPerVisit: report_data.energyWhPerVisit || 0,
+                co2Per1M: report_data.co2Per1M || 0,
+                waterPer1M: formatNumber(report_data.waterPer1M || 0),
+                energyPer1M: formatNumber(report_data.energyPer1M || 0),
+                a11ySummary: lastPage.a11ySummary || { pass: 0, warn: 0, fail: 0, total: 0 },
+                a11yIssues: pages.length ? pages[pages.length - 1].a11yIssues : [],
                 nbRequest: nbRequestTotal,
                 responsesSize: Math.round(responsesSizeTotal * 1000) / 1000,
                 pageSize: `${Math.round(responsesSizeTotal)} (${Math.round(responsesSizeUncompressTotal / 1000)})`,
@@ -216,8 +282,14 @@ function readAllReports(fileList, grafanaLink, translator) {
  * @param {*} grafanaLinkPresent
  * @returns
  */
-function readGlobalReport(path, allReportsVariables, co2Total, grafanaLinkPresent, translator) {
+function readGlobalReport(path, allReportsVariables, co2Total, grafanaLinkPresent, translator, reportPrefix) {
     const globalReport_data = JSON.parse(fs.readFileSync(path).toString());
+    const filenameByNb = new Map();
+    allReportsVariables.forEach((v, idx) => {
+        // index in JSON files is 1-based (resultId starts at 1)
+        filenameByNb.set(idx + 1, v.filename);
+    });
+    const enrichRanking = (arr) => (arr || []).map((p) => ({ ...p, detailFile: filenameByNb.get(p.nb) || '' }));
 
     let worstScores = '';
     (globalReport_data.worstPages || []).forEach((worstPage) => {
@@ -231,6 +303,24 @@ function readGlobalReport(path, allReportsVariables, co2Total, grafanaLinkPresen
         device: globalReport_data.device,
         connection: globalReport_data.connection,
         sustainabilityScore: worstScores,
+        avgEnvScore: globalReport_data.sustainabilityScore || 0,
+        avgEnvGrade: globalReport_data.grade || 'G',
+        avgSocialScore: globalReport_data.socialScore || 0,
+        avgSocialGrade: globalReport_data.socialGrade || 'G',
+        avgSecurityScore: globalReport_data.securityScore || 0,
+        avgSecurityGrade: globalReport_data.securityGrade || 'G',
+        avgServerScore: globalReport_data.serverScore || 0,
+        avgServerGrade: globalReport_data.serverGrade || 'G',
+        bestEnvPages: enrichRanking(globalReport_data.bestEnvPages),
+        worstEnvPages: enrichRanking(globalReport_data.worstEnvPages),
+        bestSocialPages: enrichRanking(globalReport_data.bestSocialPages),
+        worstSocialPages: enrichRanking(globalReport_data.worstSocialPages),
+        co2Per1M: globalReport_data.co2Per1M || 0,
+        waterPer1M: formatNumber(globalReport_data.waterPer1M || 0),
+        energyPer1M: formatNumber(globalReport_data.energyPer1M || 0),
+        co2PerVisit: globalReport_data.co2PerVisit || 0,
+        waterClPerVisit: globalReport_data.waterClPerVisit || 0,
+        energyWhPerVisit: globalReport_data.energyWhPerVisit || 0,
         grade: globalReport_data.grade,
         nbScenarios: globalReport_data.nbScenarios,
         co2Total: Math.round(co2Total * 100) / 100,
@@ -344,6 +434,46 @@ const GLOBAL_LABEL_KEYS = [
     'footerEcoIndex',
     'footerBestPractices',
     'trend',
+    'envScore',
+    'socialScore',
+    'envScoreSubtitle',
+    'socialScoreSubtitle',
+    'co2Per1M',
+    'waterPer1M',
+    'energyPer1M',
+    'perVisit',
+    'litres',
+    'kg',
+    'kWh',
+    'perfBlock',
+    'a11yBlock',
+    'impactBlock',
+    'accessibilityFindings',
+    'checksPassed',
+    'checksWarn',
+    'checksFailed',
+    'bestEnvPages',
+    'worstEnvPages',
+    'bestSocialPages',
+    'worstSocialPages',
+    'rankings',
+    'avgScore',
+    'pageDetail',
+    'securityScore',
+    'securityScoreSubtitle',
+    'serverScore',
+    'serverScoreSubtitle',
+    'cyberBlock',
+    'serverBlock',
+    'securityChecks',
+    'serverChecks',
+    'impactPerVisit',
+    'co2PerVisitCard',
+    'waterPerVisitCard',
+    'energyPerVisitCard',
+    'wh',
+    'cl',
+    'g',
 ];
 
 const GLOBAL_TOOLTIP_KEYS = [
@@ -367,6 +497,46 @@ const PAGE_LABEL_KEYS = [
     'impact',
     'priority',
     'note',
+    'envScore',
+    'socialScore',
+    'envScoreSubtitle',
+    'socialScoreSubtitle',
+    'co2Per1M',
+    'waterPer1M',
+    'energyPer1M',
+    'perVisit',
+    'litres',
+    'kg',
+    'kWh',
+    'perfBlock',
+    'a11yBlock',
+    'impactBlock',
+    'accessibilityFindings',
+    'checksPassed',
+    'checksWarn',
+    'checksFailed',
+    'bestEnvPages',
+    'worstEnvPages',
+    'bestSocialPages',
+    'worstSocialPages',
+    'rankings',
+    'avgScore',
+    'pageDetail',
+    'securityScore',
+    'securityScoreSubtitle',
+    'serverScore',
+    'serverScoreSubtitle',
+    'cyberBlock',
+    'serverBlock',
+    'securityChecks',
+    'serverChecks',
+    'impactPerVisit',
+    'co2PerVisitCard',
+    'waterPerVisitCard',
+    'energyPerVisitCard',
+    'wh',
+    'cl',
+    'g',
 ];
 
 /**
