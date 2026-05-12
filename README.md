@@ -87,11 +87,37 @@ Cette version apporte une refonte complète des règles d'éco-conception et de 
 
 # Pour commencer
 
+## Démarrage rapide (5 min)
+
+Si vous découvrez l'outil, voici les 4 étapes minimales pour produire votre premier rapport.
+
+```bash
+# 1. Installer Node.js (LTS) — https://nodejs.org/
+# 2. Récupérer et installer le projet
+git clone https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli.git
+cd nr-analysis-cli
+npm install
+npm link
+
+# 3. Auditer une URL
+nr analyse --url https://isit-europe.org/fr/
+
+# 4. Auditer plusieurs pages depuis urls.txt (fourni)
+nr analyse urls.txt
+```
+
+Le rapport HTML s'ouvre dans n'importe quel navigateur (`open` sur macOS, `xdg-open` sur Linux, double-clic sur Windows).
+
 ## Prérequis
 
-- [Node.js](https://nodejs.org/) (version LTS recommandée)
+- **[Node.js](https://nodejs.org/) 18 ou supérieur** (LTS recommandée). Vérifier avec `node -v`.
+- **npm** (livré avec Node.js). Vérifier avec `npm -v`.
+- **git** pour cloner le dépôt.
+- Une connexion Internet (l'outil télécharge Chromium au premier `npm install`).
 
-## Installation
+Pas besoin d'installer Chrome séparément : Puppeteer embarque sa propre version de Chromium.
+
+## Installation détaillée
 
 ```bash
 git clone https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli.git
@@ -100,7 +126,25 @@ npm install
 npm link
 ```
 
-La commande `npm link` crée un lien symbolique global permettant d'utiliser `nr` directement dans le terminal.
+- `npm install` installe les dépendances **et** Chromium (~150 Mo, premier lancement uniquement).
+- `npm link` crée un lien symbolique global pour utiliser la commande `nr` depuis n'importe quel dossier.
+
+### Vérifier l'installation
+
+```bash
+nr --help
+```
+
+Vous devez voir la liste des commandes (`analyse`, `parseSitemap`).
+
+### Résolution des problèmes courants
+
+| Problème | Solution |
+| -------- | -------- |
+| `nr: command not found` après `npm link` | Sur Linux/macOS, ajouter `$(npm prefix -g)/bin` au `PATH`, ou relancer le terminal. Sur Windows, utiliser PowerShell en mode administrateur. |
+| `EACCES` lors du `npm link` | `sudo npm link` (ou configurer un préfixe npm utilisateur — voir [npm docs](https://docs.npmjs.com/resolving-eacces-permissions-errors-when-installing-packages-globally)). |
+| Chromium ne se télécharge pas | Réessayer avec `PUPPETEER_DOWNLOAD_HOST=https://storage.googleapis.com npm install`. |
+| Erreur `SSL` sur un site interne | L'outil ignore déjà les erreurs SSL par défaut (Puppeteer 23+). |
 
 ---
 
@@ -124,9 +168,69 @@ Options utiles en mode `--url` :
 nr analyse --url https://www.example.com --output /tmp/rapport.html --format html
 ```
 
-### Analyse via fichier YAML
+### Analyse multi-pages via fichier plat `urls.txt`
 
-Pour analyser plusieurs pages ou définir des parcours utilisateur complexes, créez un fichier YAML :
+C'est la manière la plus simple d'auditer un lot de pages : une URL par ligne dans un fichier texte. Le rapport global agrège les moyennes, les **classements meilleures/pires pages** (environnement et accessibilité) et conserve le détail de chaque page.
+
+#### 1. Compléter `urls.txt`
+
+Un fichier d'exemple est fourni à la racine du dépôt (`urls.txt`). Format :
+
+```
+# Les commentaires commencent par #
+# Une URL par ligne, lignes vides ignorées
+
+https://www.example.com/
+https://www.example.com/produits
+https://www.example.com/contact
+```
+
+Règles :
+- 1 URL par ligne, sans guillemets ni séparateurs
+- les lignes commençant par `#` sont ignorées (commentaires)
+- les lignes vides sont ignorées
+- les URLs doivent inclure le protocole (`https://`)
+
+#### 2. Lancer l'audit
+
+```bash
+nr analyse urls.txt
+```
+
+Sorties générées dans le dossier `resultat/` à la racine du dépôt :
+
+Les fichiers sont préfixés par la date (`YYYYMMDDHH`) et le hostname du premier site afin de ne pas écraser les audits précédents.
+
+| Fichier | Contenu |
+| ------- | ------- |
+| `resultat/<date>_<host>_index.html` | Rapport global : moyennes env + social + cyber + serveur, KPIs CO₂ / eau / énergie pour 1 M visites, classements top/flop, table des pages |
+| `resultat/<date>_<host>_<n>.html` | Rapport détaillé de chaque page auditée (a11y, bonnes pratiques, étapes, contrôles cyber + serveur) |
+
+Exemple : `resultat/2026051120_isit-europe.org_index.html`
+
+Ouvrir le rapport :
+
+```bash
+open resultat/index.html       # macOS
+xdg-open resultat/index.html   # Linux
+```
+
+#### 3. Options utiles
+
+```bash
+# Ajuster le nombre de pages affichées dans les classements
+nr analyse urls.txt --worst_pages 10
+
+# Audit mobile
+nr analyse urls.txt --mobile
+
+# Rapport en anglais
+nr analyse urls.txt --language en
+```
+
+### Analyse via fichier YAML (parcours utilisateur)
+
+Pour définir des **parcours utilisateur** (clic, saisie, login, scroll), créez un fichier YAML :
 
 ```bash
 nr analyse url.yaml results.html

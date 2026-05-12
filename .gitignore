@@ -4,14 +4,16 @@ node_modules/
 dist/
 results/
 results_test/
+resultat/
 *.xlsx
 *.yaml
+
+# personal URL lists (only urls.txt example is tracked)
+urls-*.txt
 
 # macOS
 .DS_Store
 
-# Claude Code
-CLAUDE.md
 .claude/
 .remember/
 .Rhistory
