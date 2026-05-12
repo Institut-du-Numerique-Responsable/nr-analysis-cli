@@ -10,6 +10,7 @@ if (!fs.existsSync(DIR)) {
 
 const rules = glob.sync('./nr-core/rules/*.js');
 const wsgRules = glob.sync('./nr-core/rules/wsg/*.js');
+const a11yChecks = glob.sync('./nr-core/a11y/*.js');
 
 concat(
     [
@@ -18,6 +19,7 @@ concat(
         './nr-core/rulesManager.js',
         ...rules,
         ...wsgRules,
+        ...a11yChecks,
         './nr-core/greenpanel.js',
     ],
     './dist/nrBundle.js',

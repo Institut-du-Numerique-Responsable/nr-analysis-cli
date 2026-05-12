@@ -44,6 +44,7 @@ function start_analyse_core() {
         preloadCount: getPreloadCount(),
         renderBlockingScriptsCount: getRenderBlockingScriptsCount(),
         externalIframesCount: getExternalIframesCount(),
+        a11y: typeof runTanaguruChecks === 'function' ? runTanaguruChecks() : null,
     };
 }
 
