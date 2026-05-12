@@ -554,6 +554,186 @@ nr parseSitemap https://www.example.com/sitemap.xml url.yaml
 
 ---
 
+# Référentiel des règles évaluées
+
+Chaque page auditée est notée sur 4 axes indépendants. Le grade global va de **A** (excellent) à **G** (très mauvais).
+
+| Axe | Score | Source des règles |
+| --- | ----- | ----------------- |
+| **Environnement** | 0–100 | 38 règles d'éco-conception (RGESN, GR491, WSG) exécutées dans la page |
+| **Social (a11y)** | 0–100 | 12 contrôles Tanaguru/RGAA + 5 contrôles complémentaires NR |
+| **Sécurité (cyber)** | 0–100 | 13 contrôles serveur (TLS, en-têtes HTTP, cookies, DNSSEC…) |
+| **Performance serveur** | 0–100 | 9 contrôles d'infrastructure (HTTP/2, compression, cache, CDN…) |
+
+Chaque règle renvoie un **niveau de conformité** :
+
+- `A` : règle respectée
+- `B` : amélioration mineure
+- `C` : règle non respectée
+
+Le score global d'un axe est la moyenne pondérée des niveaux selon la criticité.
+
+---
+
+## 1. Environnement — règles d'éco-conception (38)
+
+### 1.1 Optimisation du transfert (poids et requêtes)
+
+| Règle | ID | Ce qu'elle mesure | Critère de réussite |
+| ----- | -- | ----------------- | ------------------- |
+| Limiter le nombre de domaines | `DomainsNumber` | Nombre de domaines tiers contactés | < 3 |
+| Limiter le nombre de requêtes HTTP | `HttpRequests` | Nombre total de requêtes | < 27 |
+| Compresser les ressources | `CompressHttp` | Taux de ressources servies en gzip/brotli | ≥ 95 % |
+| Ajouter des en-têtes de cache | `AddExpiresOrCacheControlHeaders` | `Expires` ou `Cache-Control` sur les ressources statiques | ≥ 95 % |
+| Utiliser des ETags | `UseETags` | Présence de l'en-tête `ETag` | ≥ 95 % |
+| Pas de cookie pour les ressources statiques | `NoCookieForStaticRessources` | Absence de `Cookie` sur images, CSS, JS | 100 % |
+| Limiter la taille des cookies | `MaxCookiesLength` | Poids par domaine | < 512 octets |
+| Éviter les redirections | `NoRedirect` | Nombre de redirections HTTP rencontrées | 0 |
+| Éviter les requêtes en erreur | `HttpError` | Nombre de réponses HTTP 4xx/5xx | 0 |
+
+### 1.2 Optimisation des assets
+
+| Règle | ID | Ce qu'elle mesure | Critère de réussite |
+| ----- | -- | ----------------- | ------------------- |
+| Minifier les CSS | `MinifiedCss` | Taux de fichiers CSS minifiés | ≥ 95 % |
+| Minifier les JS | `MinifiedJs` | Taux de fichiers JS minifiés | ≥ 95 % |
+| Externaliser les CSS | `ExternalizeCss` | CSS dans un fichier `.css`, pas inline | présent |
+| Externaliser les JS | `ExternalizeJs` | JS dans un fichier `.js`, pas inline | présent |
+| Limiter le nombre de fichiers CSS | `StyleSheets` | Nombre de fichiers CSS chargés | < 3 |
+| Valider le JavaScript | `JsValidate` | Erreurs JS détectées dans la console | 0 |
+
+### 1.3 Images
+
+| Règle | ID | Ce qu'elle mesure | Critère de réussite |
+| ----- | -- | ----------------- | ------------------- |
+| Ne pas retailler dans le navigateur | `DontResizeImageInBrowser` | Images dont la taille rendue ≪ taille source | 0 |
+| Ne pas télécharger des images inutilement | `ImageDownloadedNotDisplayed` | Images chargées mais non affichées | 0 |
+| Éviter les `<img src="">` vides | `EmptySrcTag` | Tags `<img src="">` vides | 0 |
+| Optimiser les images bitmap | `OptimizeBitmapImages` | Compression suffisante des JPEG/PNG | seuil interne |
+| Optimiser les images SVG | `OptimizeSvg` | Compression et nettoyage des SVG | seuil interne |
+| Utiliser des formats modernes | `ModernImageFormats` | Taux d'images bitmap servies en **AVIF / WebP / JPEG XL** | 100 % |
+| Lazy-loading images & iframes | `LazyLoadImages` | `loading="lazy"` sur les `<img>` et `<iframe>` hors viewport | ≥ 80 % |
+| Images responsives (`srcset`) | `ResponsiveImages` | Attribut `srcset` / `sizes` ou `<picture><source>` parent | ≥ 50 % |
+
+### 1.4 Polices
+
+| Règle | ID | Ce qu'elle mesure | Critère de réussite |
+| ----- | -- | ----------------- | ------------------- |
+| Polices standards | `UseStandardTypefaces` | Pas plus de N fichiers de polices personnalisées | seuil interne |
+| Optimiser le chargement des polices | `OptimizeFonts` | Nombre de fichiers ≤ 2 **et** poids total ≤ 100 Ko | les deux |
+| Sous-ensemble (unicode-range) | `FontSubsetting` | Utilisation de `unicode-range` dans `@font-face` | au moins 1 |
+
+### 1.5 Performances de rendu
+
+| Règle | ID | Ce qu'elle mesure | Critère de réussite |
+| ----- | -- | ----------------- | ------------------- |
+| Éviter les ressources bloquantes | `NoRenderBlockingResources` | `<script>` dans `<head>` sans `async` / `defer` / `module` | 0 |
+| Ne pas abuser des preload/prefetch | `NoExcessivePreload` | Nombre de `<link rel="preload"\|prefetch">` | ≤ 5 |
+| Pas d'autoplay vidéo/audio | `NoAutoplayVideo` | Présence d'attributs `autoplay` | 0 |
+| Pas de plugins navigateur | `Plugins` | `<object>`, `<embed>` (Flash, Java, Silverlight) | 0 |
+
+### 1.6 Confidentialité et empreinte indirecte
+
+| Règle | ID | Ce qu'elle mesure | Critère de réussite |
+| ----- | -- | ----------------- | ------------------- |
+| Limiter les scripts de tracking | `TrackingScripts` | Domaines connus (Google, Meta, TikTok, Snap, Pinterest, Reddit, OneTrust, Cookiebot…) | 0 |
+| Limiter les iframes tierces | `NoExternalIframes` | iframes vers des domaines tiers | seuil interne |
+| Pas de widgets sociaux officiels | `SocialNetworkButton` | Présence X/Twitter, LinkedIn badges, Facebook Like, etc. | 0 |
+
+### 1.7 Adaptation à l'utilisateur
+
+| Règle | ID | Ce qu'elle mesure | Critère de réussite |
+| ----- | -- | ----------------- | ------------------- |
+| Print CSS | `PrintStyleSheet` | `@media print` ou stylesheet `media="print"` | présent |
+| Respect `prefers-reduced-motion` | `ReducedMotion` | `@media (prefers-reduced-motion)` dans le CSS | présent |
+| Support du mode sombre | `DarkModeSupport` | `<meta name="color-scheme">` **ou** `color-scheme` CSS sur `:root` | présent |
+| Sous-titres vidéo | `VideoSubtitles` | `<track kind="captions\|subtitles">` sur chaque `<video>` | tous |
+
+---
+
+## 2. Social — accessibilité (17 contrôles)
+
+### 2.1 Tanaguru / RGAA (12)
+
+| Contrôle | ID | Ce qu'il vérifie |
+| -------- | -- | ---------------- |
+| Alternatives textuelles | `ImgAlt` | Toutes les `<img>` non décoratives portent un attribut `alt` |
+| Langue du document | `DocumentLanguage` | `<html lang="...">` présent et valide |
+| Titre de page | `PageTitle` | `<title>` non vide, distinct entre pages |
+| Structure des titres | `HeadingStructure` | Un seul `<h1>`, hiérarchie h1-h6 sans saut |
+| Étiquettes de formulaire | `FormLabel` | Chaque champ a un `<label>` ou `aria-label` |
+| Intitulés de liens | `LinkText` | Pas de « cliquez ici », « en savoir plus » seuls |
+| Nom des boutons | `ButtonName` | Texte visible ou `aria-label` sur tout `<button>` |
+| Landmarks ARIA | `Landmarks` | `<main>`, `<nav>`, `<header>`, `<footer>` ou rôles équivalents |
+| En-têtes de tableau | `TableHeaders` | `<th>` dans les tableaux de données |
+| Contraste des couleurs | `ColorContrast` | Ratio ≥ 4.5:1 (texte normal) / 3:1 (grand texte) |
+| Titre des iframes | `IframeTitle` | Attribut `title` sur chaque `<iframe>` |
+| Ordre de tabulation | `TabIndex` | Pas de `tabindex` > 0 |
+
+### 2.2 Contrôles NR complémentaires (5)
+
+| Contrôle | ID | Ce qu'il vérifie |
+| -------- | -- | ---------------- |
+| `font-display: swap` | `FontDisplaySwap` | Évite le FOIT (texte invisible pendant le chargement) |
+| Preload des polices critiques | `FontPreload` | `<link rel="preload" as="font">` pour polices `font-display: swap` |
+| Sous-ensemble de polices | `FontSubset` | Présence d'`unicode-range` |
+| Bandeau consentement | `ConsentBanner` | Bandeau RGPD détecté avant le dépôt de cookies |
+| Cookies tiers | `ThirdPartyCookies` | Cookies déposés par des domaines tiers avant consentement |
+
+---
+
+## 3. Cyber — sécurité serveur (13 contrôles)
+
+| Contrôle | ID | Ce qu'il vérifie | Sévérité |
+| -------- | -- | ---------------- | -------- |
+| Version TLS | `Tls` | TLS 1.2 ou 1.3 uniquement | Critique |
+| HSTS | `Hsts` | En-tête `Strict-Transport-Security` ≥ 6 mois | Important |
+| CSP | `Csp` | En-tête `Content-Security-Policy` présent | Important |
+| X-Content-Type-Options | `XContentTypeOptions` | `nosniff` | Important |
+| X-Frame-Options | `XFrameOptions` | `DENY` ou `SAMEORIGIN` (anti-clickjacking) | Important |
+| Referrer-Policy | `ReferrerPolicy` | Politique restrictive | Recommandé |
+| Permissions-Policy | `PermissionsPolicy` | Restriction des APIs sensibles (caméra, micro…) | Recommandé |
+| Drapeaux cookies | `CookieFlags` | `Secure`, `HttpOnly`, `SameSite` sur tous les `Set-Cookie` | Critique |
+| Fuite serveur | `ServerLeak` | En-tête `Server` ne révèle pas la version | Recommandé |
+| security.txt | `SecurityTxt` | `/.well-known/security.txt` conforme RFC 9116 | Recommandé |
+| Redirection HTTP→HTTPS | `HttpToHttpsRedirect` | Redirection 301 du `http://` vers `https://` | Critique |
+| Cross-Origin Isolation | `CrossOriginIsolation` | COOP + CORP (protection Spectre) | Recommandé |
+| DNSSEC | `Dnssec` | Zone DNS signée | Recommandé |
+
+---
+
+## 4. Performance serveur (9 contrôles)
+
+| Contrôle | ID | Ce qu'il vérifie | Sévérité |
+| -------- | -- | ---------------- | -------- |
+| OCSP Stapling | `OcspStapling` | TLS handshake court (révocation pré-signée) | Recommandé |
+| Version HTTP | `HttpVersion` | HTTP/2 ou HTTP/3 (multiplexage) | Important |
+| Cache-Control | `CacheControl` | Politique de cache explicite | Important |
+| Compression | `Compression` | gzip ou Brotli activés (Brotli recommandé) | Important |
+| IPv6 DNS | `DnsIpv6` | Au moins 1 enregistrement AAAA | Recommandé |
+| Redondance DNS | `DnsRedundancy` | ≥ 2 IPs distinctes en A/AAAA | Recommandé |
+| TLS Resumption | `TlsResumption` | Session tickets ou session ID actifs | Recommandé |
+| CDN | `Cdn` | Signature CDN détectée (Cloudflare, Fastly, OVH CDN…) | Informatif |
+
+---
+
+## 5. Métriques environnementales calculées
+
+En plus des règles, l'outil estime pour chaque page :
+
+| Métrique | Modèle | Unité |
+| -------- | ------ | ----- |
+| **Score de durabilité** | Pondération des règles d'éco-conception | 0–100 (A–G) |
+| **CO₂ par visite** | Sustainable Web Design v4 + green hosting (Green Web Foundation) | g CO₂eq |
+| **Eau par visite** | SWD v4 × WUE (1.8 L/kWh — moyenne UNESCO) | cL |
+| **Énergie par visite** | SWD v4 (0.81 kWh/GB transféré) | Wh |
+| **CO₂ pour 1 M visites** | extrapolation linéaire | kg CO₂eq |
+| **Eau pour 1 M visites** | extrapolation linéaire | L |
+| **Énergie pour 1 M visites** | extrapolation linéaire | kWh |
+| **Hébergement vert** | API Green Web Foundation | booléen (A/C) |
+
+---
+
 # Conditions d'utilisation
 
 Cet outil s'appuie sur l'API de l'extension GreenIT-Analysis qui **ne permet pas une utilisation à des fins commerciales**.
