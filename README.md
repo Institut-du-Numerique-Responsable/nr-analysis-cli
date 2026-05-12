@@ -108,6 +108,52 @@ nr analyse urls.txt
 
 Le rapport HTML s'ouvre dans n'importe quel navigateur (`open` sur macOS, `xdg-open` sur Linux, double-clic sur Windows).
 
+### Commande type — audit crawl complet d'un site français
+
+Cas typique : crawler automatiquement un site grand public hébergé/consulté en France, avec méthodologie SWDM v4 enrichie NegaOctet/ARCEP/ADEME.
+
+```bash
+nr analyse \
+  --url https://www.bigben-connected.com/ \
+  --recursive \
+  --depth 2 \
+  --max_pages 25 \
+  --country FRA \
+  --methodology negaoctet \
+  --language fr \
+  --ci
+```
+
+| Flag                     | Rôle |
+| ------------------------ | ---- |
+| `--url <URL>`            | URL de départ (obligatoire pour `--recursive`) |
+| `--recursive`            | Crawl automatique des liens internes |
+| `--depth 2`              | Profondeur 2 (URL initiale + 2 niveaux) |
+| `--max_pages 25`         | Plafond à 25 pages analysées |
+| `--country FRA`          | Visiteur en France (mix électrique 44 gCO₂/kWh) |
+| `--methodology negaoctet`| Ajoute l'overhead ACV terminal (NegaOctet/ARCEP/ADEME) → empreinte ~1,5–2 g/visite cohérente avec études FR |
+| `--language fr`          | Rapport en français |
+| `--ci`                   | Désactive la barre de progression (sortie texte exploitable) |
+
+Le rapport global sort dans `~/Downloads/<date>_<host>.html` (mode `--url`) ou `resultat/<date>_<host>_index.html` (mode fichier `urls.txt`).
+
+### Alias shell (optionnel)
+
+Pour éviter de répéter les flags FR/NegaOctet, ajouter à `~/.zshrc` (ou `~/.bashrc`) :
+
+```bash
+alias nr-fr='nr analyse --country FRA --methodology negaoctet --language fr --ci'
+alias nr-fr-crawl='nr analyse --country FRA --methodology negaoctet --language fr --ci --recursive --depth 2 --max_pages 25'
+```
+
+Puis :
+
+```bash
+nr-fr --url https://www.example.com           # audit page unique
+nr-fr urls.txt                                # audit fichier de liste
+nr-fr-crawl --url https://www.example.com     # crawl 25 pages depth 2
+```
+
 ## Prérequis
 
 - **[Node.js](https://nodejs.org/) 18 ou supérieur** (LTS recommandée). Vérifier avec `node -v`.
@@ -433,11 +479,31 @@ nr analyse [url_input_file] [report_output_file] [options]
 | `--recursive`         |       | Crawl récursif des liens internes (nécessite `--url`)                     | `false`   |
 | `--depth`             |       | Profondeur maximale du crawl                                              | `5`       |
 | `--max_pages`         |       | Nombre maximum de pages à crawler et analyser                             | `200`     |
+| `--country`           |       | Pays du visiteur/terminal — ISO 3166-1 alpha-3 (`FRA`, `USA`, `DEU`…). Drive l'intensité carbone du segment device dans SWDM v4 | `FRA` |
+| `--dc_country`        |       | Pays du datacenter/origine — ISO 3166-1 alpha-3. Auto-détecté via `x-amz-cf-pop`, `cf-ray` puis IP geolocation (ipapi.co) si omis | auto |
+| `--grid_device_gco2`  |       | Override intensité carbone terminal en gCO₂/kWh (plug une valeur Electricity Maps à jour). Prioritaire sur `--country`                       |           |
+| `--grid_dc_gco2`      |       | Override intensité carbone datacenter en gCO₂/kWh                         |           |
+| `--grid_network_gco2` |       | Override intensité carbone réseau en gCO₂/kWh                             |           |
+| `--methodology`       |       | Modèle CO₂ : `swdm-v4` (octets transférés seuls) ou `negaoctet` (SWDM v4 + overhead ACV terminal calibré NegaOctet/ARCEP/ADEME pour la France) | `swdm-v4` |
 | `--grafana_link`      |       | URL du dashboard Grafana (format `influxdbhtml`)                          |           |
 | `--influxdb_hostname` |       | URL de la base InfluxDB                                                   |           |
 | `--influxdb_org`      |       | Nom de l'organisation InfluxDB                                            |           |
 | `--influxdb_token`    |       | Token de connexion InfluxDB                                               |           |
 | `--influxdb_bucket`   |       | Bucket InfluxDB                                                           |           |
+
+### Empreinte carbone — choix méthodologique
+
+L'outil expose **trois indicateurs complémentaires** dans le rapport :
+
+| Indicateur | Modèle | À quoi ça sert |
+| ---------- | ------ | -------------- |
+| **SWDM v4** | bytes × kWh/GB × gCO₂/kWh (Sustainable Web Design v4, Green Web Foundation) | Bilan GES, scope **livraison** (terminal + réseau + datacenter origine) |
+| **EcoIndex** | formule officielle ecoindex.fr (DOM × 3, requêtes × 2, poids × 1) | Pilotage écoconception structurelle |
+| **Score synthétique** | EcoIndex et SWD normalisés puis pondérés 50/50 + confidence | Score global d'une page |
+
+Le flag `--methodology negaoctet` enrichit SWDM v4 avec un **overhead per-visit** calibré sur les études françaises (NegaOctet 2022, ARCEP/ADEME 2022, ADEME Base Empreinte 2024) pour capturer la part ACV terminal/lifecycle absente du modèle bytes-only. Recommandé pour un site grand public hébergé/consulté en France.
+
+Le flag `--dc_country` (ou auto-détection via CDN/IP) dissocie l'intensité carbone du datacenter de celle du visiteur. Critique quand DC ≠ pays visiteur (ex. visiteur France + hébergement AWS Ireland).
 
 **Terminaux supportés (`--device`) :**
 
