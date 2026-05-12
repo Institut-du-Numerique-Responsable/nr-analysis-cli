@@ -4,7 +4,9 @@ const path = require('path');
 const { harFromMessages } = require('chrome-har');
 const sizes = require('../sizes.js');
 const { createProgressBar } = require('./utils');
-const { checkGreenHosting, computeCo2 } = require('./co2Client');
+const { checkGreenHosting, computeCo2, computeEcoIndexImpact } = require('./co2Client');
+const { computeSynthetic, buildRecommendations } = require('./synthetic');
+const { detectDatacenterCountry } = require('./geoLookup');
 const { computeScore } = require('./scoring');
 const { computeSocialScore } = require('./socialScoring');
 const { auditServer } = require('./serverAudit');
@@ -38,8 +40,14 @@ async function analyseScenario(browser, pageInformations, options, translator, p
 
         await page.setViewport(sizes[DEVICE]);
 
-        // disabling cache
+        // disabling cache + service worker (SW would mask real network transfer size)
         await page.setCacheEnabled(false);
+        try {
+            const cdp = await page.target().createCDPSession();
+            await cdp.send('Network.setBypassServiceWorker', { bypass: true });
+        } catch (_e) {
+            /* CDP unavailable — proceed without SW bypass */
+        }
 
         // Execute actions on page (click, text, ...)
         let pages = await startActions(page, pageInformations, TIMEOUT, translator, pageLoadingLabel);
@@ -324,8 +332,9 @@ async function login(browser, loginInformations, options) {
     await waitPageLoading(page, loginInformations, options.timeout);
 }
 
-async function enrichResultsWithScoring(results) {
+async function enrichResultsWithScoring(results, options = {}) {
     if (!results.success) return;
+    const deviceCountry = (options.country || 'FRA').toUpperCase();
 
     const domain = results.pageInformations.url
         .replace(/^https?:\/\//, '')
@@ -338,6 +347,25 @@ async function enrichResultsWithScoring(results) {
     } catch (e) {
         serverAuditResult = null;
     }
+    let dcDetect = null;
+    if (options.dc_country) {
+        dcDetect = { iso3: options.dc_country.toUpperCase(), source: 'cli-flag' };
+    } else if (serverAuditResult && serverAuditResult.raw) {
+        try {
+            const ips = [
+                ...((serverAuditResult.raw.dnsInfo && serverAuditResult.raw.dnsInfo.a) || []),
+                ...((serverAuditResult.raw.dnsInfo && serverAuditResult.raw.dnsInfo.aaaa) || []),
+            ];
+            dcDetect = await detectDatacenterCountry({
+                headers: serverAuditResult.raw.headers || {},
+                ips,
+            });
+        } catch (_e) {
+            dcDetect = null;
+        }
+    }
+    const dcCountry = (dcDetect && dcDetect.iso3) || deviceCountry;
+    const dcSource = (dcDetect && dcDetect.source) || 'fallback-device';
     const securityScoring = computeSecurityScore(serverAuditResult && serverAuditResult.security);
     const serverScoring = computeServerScore(serverAuditResult && serverAuditResult.server);
     results.security = serverAuditResult ? serverAuditResult.security : null;
@@ -357,15 +385,49 @@ async function enrichResultsWithScoring(results) {
 
             action.bestPractices.GreenHosting = greenHostingResult;
             const isGreen = greenHostingResult.complianceLevel === 'A';
-            const co2 = computeCo2(action.responsesSize || 0, isGreen);
+            const co2 = computeCo2(action.responsesSize || 0, isGreen, {
+                deviceCountry,
+                dcCountry,
+            });
             action.bestPractices.Co2PerVisit = co2.result;
             action.co2PerVisit = co2.value;
+            action.co2FirstVisit = co2.firstVisitGrams;
+            action.co2CacheWeighted = co2.cacheWeightedGrams;
+            action.co2TransferredKb = co2.transferredKb;
+            action.co2Country = co2.country;
+            action.co2DeviceCountry = co2.deviceCountry;
+            action.co2DcCountry = co2.dcCountry;
+            action.co2DcSource = dcSource;
+            action.co2NetworkCountry = co2.networkCountry;
+            action.co2GridIntensityDevice = co2.gridIntensityDevice;
+            action.co2GridIntensityDc = co2.gridIntensityDc;
+            action.co2GridIntensityNetwork = co2.gridIntensityNetwork;
+            action.co2GridIntensity = co2.gridIntensity;
+            action.co2GreenHosting = co2.greenHosting;
+            action.co2Breakdown = co2.breakdown;
+            action.co2Model = co2.model;
             action.co2Per1M = co2.co2Per1M;
             action.waterPer1M = co2.waterPer1M;
             action.energyPer1M = co2.energyPer1M;
             action.waterPerVisit = co2.waterPerVisit;
             action.waterClPerVisit = co2.waterClPerVisit;
             action.energyWhPerVisit = co2.energyWhPerVisit;
+
+            const ecoIdx = computeEcoIndexImpact(action.domSize, action.nbRequest, action.responsesSize);
+            action.ecoIndex = ecoIdx.ecoIndex;
+            action.ecoIndexGrade = ecoIdx.ecoIndexGrade;
+            action.ecoIndexCo2PerVisit = ecoIdx.co2PerVisit;
+            action.ecoIndexWaterClPerVisit = ecoIdx.waterClPerVisit;
+            action.ecoIndexCo2Per1M = ecoIdx.co2Per1M;
+            action.ecoIndexWaterPer1M = ecoIdx.waterPer1M;
+
+            const synthetic = computeSynthetic(ecoIdx, co2);
+            action.syntheticScore = synthetic.score;
+            action.syntheticGrade = synthetic.grade;
+            action.syntheticConfidence = synthetic.confidence;
+            action.syntheticRationale = synthetic.rationale;
+            action.syntheticComponents = synthetic.components;
+            action.recommendations = buildRecommendations(action, ecoIdx, co2, synthetic);
 
             const scoring = computeScore(action.bestPractices);
             action.sustainabilityScore = scoring.score;
@@ -389,6 +451,33 @@ async function enrichResultsWithScoring(results) {
         page.energyPer1M = lastAction.energyPer1M;
         page.waterClPerVisit = lastAction.waterClPerVisit;
         page.energyWhPerVisit = lastAction.energyWhPerVisit;
+        page.ecoIndex = lastAction.ecoIndex;
+        page.ecoIndexGrade = lastAction.ecoIndexGrade;
+        page.ecoIndexCo2PerVisit = lastAction.ecoIndexCo2PerVisit;
+        page.ecoIndexWaterClPerVisit = lastAction.ecoIndexWaterClPerVisit;
+        page.ecoIndexCo2Per1M = lastAction.ecoIndexCo2Per1M;
+        page.ecoIndexWaterPer1M = lastAction.ecoIndexWaterPer1M;
+        page.syntheticScore = lastAction.syntheticScore;
+        page.syntheticGrade = lastAction.syntheticGrade;
+        page.syntheticConfidence = lastAction.syntheticConfidence;
+        page.syntheticRationale = lastAction.syntheticRationale;
+        page.syntheticComponents = lastAction.syntheticComponents;
+        page.recommendations = lastAction.recommendations;
+        page.co2Country = lastAction.co2Country;
+        page.co2GridIntensity = lastAction.co2GridIntensity;
+        page.co2GreenHosting = lastAction.co2GreenHosting;
+        page.co2Breakdown = lastAction.co2Breakdown;
+        page.co2Model = lastAction.co2Model;
+        page.co2FirstVisit = lastAction.co2FirstVisit;
+        page.co2CacheWeighted = lastAction.co2CacheWeighted;
+        page.co2TransferredKb = lastAction.co2TransferredKb;
+        page.co2DeviceCountry = lastAction.co2DeviceCountry;
+        page.co2DcCountry = lastAction.co2DcCountry;
+        page.co2DcSource = lastAction.co2DcSource;
+        page.co2NetworkCountry = lastAction.co2NetworkCountry;
+        page.co2GridIntensityDevice = lastAction.co2GridIntensityDevice;
+        page.co2GridIntensityDc = lastAction.co2GridIntensityDc;
+        page.co2GridIntensityNetwork = lastAction.co2GridIntensityNetwork;
         page.socialScore = lastAction.socialScore;
         page.socialGrade = lastAction.socialGrade;
         page.a11ySummary = lastAction.a11ySummary;
@@ -405,6 +494,33 @@ async function enrichResultsWithScoring(results) {
     results.energyPer1M = lastPage.energyPer1M;
     results.waterClPerVisit = lastPage.waterClPerVisit;
     results.energyWhPerVisit = lastPage.energyWhPerVisit;
+    results.ecoIndex = lastPage.ecoIndex;
+    results.ecoIndexGrade = lastPage.ecoIndexGrade;
+    results.ecoIndexCo2PerVisit = lastPage.ecoIndexCo2PerVisit;
+    results.ecoIndexWaterClPerVisit = lastPage.ecoIndexWaterClPerVisit;
+    results.ecoIndexCo2Per1M = lastPage.ecoIndexCo2Per1M;
+    results.ecoIndexWaterPer1M = lastPage.ecoIndexWaterPer1M;
+    results.syntheticScore = lastPage.syntheticScore;
+    results.syntheticGrade = lastPage.syntheticGrade;
+    results.syntheticConfidence = lastPage.syntheticConfidence;
+    results.syntheticRationale = lastPage.syntheticRationale;
+    results.syntheticComponents = lastPage.syntheticComponents;
+    results.recommendations = lastPage.recommendations;
+    results.co2Country = lastPage.co2Country;
+    results.co2GridIntensity = lastPage.co2GridIntensity;
+    results.co2GreenHosting = lastPage.co2GreenHosting;
+    results.co2Breakdown = lastPage.co2Breakdown;
+    results.co2Model = lastPage.co2Model;
+    results.co2FirstVisit = lastPage.co2FirstVisit;
+    results.co2CacheWeighted = lastPage.co2CacheWeighted;
+    results.co2TransferredKb = lastPage.co2TransferredKb;
+    results.co2DeviceCountry = lastPage.co2DeviceCountry;
+    results.co2DcCountry = lastPage.co2DcCountry;
+    results.co2DcSource = lastPage.co2DcSource;
+    results.co2NetworkCountry = lastPage.co2NetworkCountry;
+    results.co2GridIntensityDevice = lastPage.co2GridIntensityDevice;
+    results.co2GridIntensityDc = lastPage.co2GridIntensityDc;
+    results.co2GridIntensityNetwork = lastPage.co2GridIntensityNetwork;
 }
 
 async function createJsonReports(browser, pagesInformations, options, proxy, headers, translator) {
@@ -487,7 +603,7 @@ async function createJsonReports(browser, pagesInformations, options, proxy, hea
             continue;
         }
 
-        await enrichResultsWithScoring(results);
+        await enrichResultsWithScoring(results, options);
 
         const filePath = path.resolve(SUBRESULTS_DIRECTORY, `${resultId}.json`);
         writeList.push(fs.promises.writeFile(filePath, JSON.stringify(results)));

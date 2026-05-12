@@ -127,6 +127,15 @@ yargs(hideBin(process.argv))
                     type: 'number',
                     description: 'Maximum number of pages to crawl and analyse (used with --recursive)',
                     default: 200,
+                })
+                .option('country', {
+                    type: 'string',
+                    description: 'ISO 3166-1 alpha-3 country code for visitor/terminal grid intensity (e.g. FRA, USA, DEU)',
+                    default: 'FRA',
+                })
+                .option('dc_country', {
+                    type: 'string',
+                    description: 'ISO 3166-1 alpha-3 country for datacenter/origin grid intensity. Auto-detected via CDN headers + IP geolocation when omitted.',
                 });
         },
         (argv) => {

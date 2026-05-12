@@ -131,6 +131,12 @@ function readAllReports(fileList, grafanaLink, translator, reportPrefix) {
                     res.co2Per1M = action.co2Per1M || 0;
                     res.waterPer1M = action.waterPer1M || 0;
                     res.energyPer1M = action.energyPer1M || 0;
+                    res.ecoIndex = action.ecoIndex || 0;
+                    res.ecoIndexGrade = action.ecoIndexGrade || 'G';
+                    res.ecoIndexCo2PerVisit = action.ecoIndexCo2PerVisit || 0;
+                    res.ecoIndexWaterClPerVisit = action.ecoIndexWaterClPerVisit || 0;
+                    res.ecoIndexCo2Per1M = action.ecoIndexCo2Per1M || 0;
+                    res.ecoIndexWaterPer1M = action.ecoIndexWaterPer1M || 0;
                     res.nbRequest = action.nbRequest;
                     res.domSize = action.domSize;
                     res.responsesSize = action.responsesSize / 1000;
@@ -148,6 +154,12 @@ function readAllReports(fileList, grafanaLink, translator, reportPrefix) {
                 analyzePage.co2Per1M = lastAction.co2Per1M || 0;
                 analyzePage.waterPer1M = lastAction.waterPer1M || 0;
                 analyzePage.energyPer1M = lastAction.energyPer1M || 0;
+                analyzePage.ecoIndex = lastAction.ecoIndex || 0;
+                analyzePage.ecoIndexGrade = lastAction.ecoIndexGrade || 'G';
+                analyzePage.ecoIndexCo2PerVisit = lastAction.ecoIndexCo2PerVisit || 0;
+                analyzePage.ecoIndexWaterClPerVisit = lastAction.ecoIndexWaterClPerVisit || 0;
+                analyzePage.ecoIndexCo2Per1M = lastAction.ecoIndexCo2Per1M || 0;
+                analyzePage.ecoIndexWaterPer1M = lastAction.ecoIndexWaterPer1M || 0;
                 analyzePage.socialScore = lastAction.socialScore || 0;
                 analyzePage.socialGrade = lastAction.socialGrade || 'G';
                 analyzePage.domSize = lastAction.domSize;
@@ -245,6 +257,36 @@ function readAllReports(fileList, grafanaLink, translator, reportPrefix) {
                 co2Per1M: report_data.co2Per1M || 0,
                 waterPer1M: formatNumber(report_data.waterPer1M || 0),
                 energyPer1M: formatNumber(report_data.energyPer1M || 0),
+                ecoIndex: report_data.ecoIndex || 0,
+                ecoIndexGrade: report_data.ecoIndexGrade || 'G',
+                ecoIndexCo2PerVisit: report_data.ecoIndexCo2PerVisit || 0,
+                ecoIndexWaterClPerVisit: report_data.ecoIndexWaterClPerVisit || 0,
+                ecoIndexCo2Per1M: report_data.ecoIndexCo2Per1M || 0,
+                ecoIndexWaterPer1M: formatNumber(report_data.ecoIndexWaterPer1M || 0),
+                syntheticScore: report_data.syntheticScore || 0,
+                syntheticGrade: report_data.syntheticGrade || 'G',
+                syntheticConfidence: report_data.syntheticConfidence || 'low',
+                confHigh: report_data.syntheticConfidence === 'high',
+                confMedium: report_data.syntheticConfidence === 'medium',
+                confLow: report_data.syntheticConfidence === 'low',
+                syntheticRationale: report_data.syntheticRationale || '',
+                syntheticComponents: report_data.syntheticComponents || {},
+                recommendations: report_data.recommendations || [],
+                co2Country: report_data.co2Country || '',
+                co2GridIntensity: report_data.co2GridIntensity || 0,
+                co2GreenHosting: report_data.co2GreenHosting || false,
+                co2Breakdown: report_data.co2Breakdown || {},
+                co2Model: report_data.co2Model || { name: 'swd', version: 4 },
+                co2FirstVisit: report_data.co2FirstVisit || 0,
+                co2CacheWeighted: report_data.co2CacheWeighted || 0,
+                co2TransferredKb: report_data.co2TransferredKb || 0,
+                co2DeviceCountry: report_data.co2DeviceCountry || 'FRA',
+                co2DcCountry: report_data.co2DcCountry || 'FRA',
+                co2DcSource: report_data.co2DcSource || 'fallback-device',
+                co2NetworkCountry: report_data.co2NetworkCountry || 'FRA',
+                co2GridIntensityDevice: report_data.co2GridIntensityDevice || 0,
+                co2GridIntensityDc: report_data.co2GridIntensityDc || 0,
+                co2GridIntensityNetwork: report_data.co2GridIntensityNetwork || 0,
                 a11ySummary: lastPage.a11ySummary || { pass: 0, warn: 0, fail: 0, total: 0 },
                 a11yIssues: pages.length ? pages[pages.length - 1].a11yIssues : [],
                 nbRequest: nbRequestTotal,
@@ -321,6 +363,28 @@ function readGlobalReport(path, allReportsVariables, co2Total, grafanaLinkPresen
         co2PerVisit: globalReport_data.co2PerVisit || 0,
         waterClPerVisit: globalReport_data.waterClPerVisit || 0,
         energyWhPerVisit: globalReport_data.energyWhPerVisit || 0,
+        ecoIndex: globalReport_data.ecoIndex || 0,
+        ecoIndexGrade: globalReport_data.ecoIndexGrade || 'G',
+        ecoIndexCo2PerVisit: globalReport_data.ecoIndexCo2PerVisit || 0,
+        ecoIndexWaterClPerVisit: globalReport_data.ecoIndexWaterClPerVisit || 0,
+        ecoIndexCo2Per1M: globalReport_data.ecoIndexCo2Per1M || 0,
+        ecoIndexWaterPer1M: formatNumber(globalReport_data.ecoIndexWaterPer1M || 0),
+        syntheticConfidence: globalReport_data.syntheticConfidence || 'low',
+        confHigh: globalReport_data.syntheticConfidence === 'high',
+        confMedium: globalReport_data.syntheticConfidence === 'medium',
+        confLow: globalReport_data.syntheticConfidence === 'low',
+        co2TransferredKb: globalReport_data.co2TransferredKb || 0,
+        co2CacheWeighted: globalReport_data.co2CacheWeighted || 0,
+        co2Country: globalReport_data.co2Country || 'FRA',
+        co2GridIntensity: globalReport_data.co2GridIntensity || 0,
+        co2GreenHosting: globalReport_data.co2GreenHosting || false,
+        co2DeviceCountry: globalReport_data.co2DeviceCountry || 'FRA',
+        co2DcCountry: globalReport_data.co2DcCountry || 'FRA',
+        co2DcSource: globalReport_data.co2DcSource || 'fallback-device',
+        co2NetworkCountry: globalReport_data.co2NetworkCountry || 'FRA',
+        co2GridIntensityDevice: globalReport_data.co2GridIntensityDevice || 0,
+        co2GridIntensityDc: globalReport_data.co2GridIntensityDc || 0,
+        co2GridIntensityNetwork: globalReport_data.co2GridIntensityNetwork || 0,
         grade: globalReport_data.grade,
         nbScenarios: globalReport_data.nbScenarios,
         co2Total: Math.round(co2Total * 100) / 100,
@@ -474,6 +538,36 @@ const GLOBAL_LABEL_KEYS = [
     'wh',
     'cl',
     'g',
+    'ecoIndexBlock',
+    'ecoIndexSwdBlock',
+    'ecoIndexCo2PerVisitCard',
+    'ecoIndexWaterPerVisitCard',
+    'ecoIndexScoreCard',
+    'ecoIndexNote',
+    'syntheticBlock',
+    'syntheticScoreCard',
+    'syntheticConfidence',
+    'syntheticRationale',
+    'co2Breakdown',
+    'operational',
+    'embodied',
+    'device',
+    'network',
+    'dataCenter',
+    'gridIntensity',
+    'recommendations',
+    'kpiHeadline',
+    'kpiHeadlineDesc',
+    'kpiReporting',
+    'kpiReportingTag',
+    'kpiReportingHelp',
+    'kpiPiloting',
+    'kpiPilotingTag',
+    'kpiPilotingHelp',
+    'kpiInterpret',
+    'kpiInterpretHigh',
+    'kpiInterpretMedium',
+    'kpiInterpretLow',
 ];
 
 const GLOBAL_TOOLTIP_KEYS = [
@@ -537,6 +631,36 @@ const PAGE_LABEL_KEYS = [
     'wh',
     'cl',
     'g',
+    'ecoIndexBlock',
+    'ecoIndexSwdBlock',
+    'ecoIndexCo2PerVisitCard',
+    'ecoIndexWaterPerVisitCard',
+    'ecoIndexScoreCard',
+    'ecoIndexNote',
+    'syntheticBlock',
+    'syntheticScoreCard',
+    'syntheticConfidence',
+    'syntheticRationale',
+    'co2Breakdown',
+    'operational',
+    'embodied',
+    'device',
+    'network',
+    'dataCenter',
+    'gridIntensity',
+    'recommendations',
+    'kpiHeadline',
+    'kpiHeadlineDesc',
+    'kpiReporting',
+    'kpiReportingTag',
+    'kpiReportingHelp',
+    'kpiPiloting',
+    'kpiPilotingTag',
+    'kpiPilotingHelp',
+    'kpiInterpret',
+    'kpiInterpretHigh',
+    'kpiInterpretMedium',
+    'kpiInterpretLow',
 ];
 
 /**

@@ -59,3 +59,12 @@ function computeGreenhouseGasesEmissionfromEcoIndex(ecoIndex) {
 function computeWaterConsumptionfromEcoIndex(ecoIndex) {
     return Math.round(100 * (3 + (3 * (50 - ecoIndex)) / 100)) / 100;
 }
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        computeEcoIndex,
+        getEcoIndexGrade,
+        computeGreenhouseGasesEmissionfromEcoIndex,
+        computeWaterConsumptionfromEcoIndex,
+    };
+}
