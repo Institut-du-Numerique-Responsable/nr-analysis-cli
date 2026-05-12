@@ -388,6 +388,10 @@ async function enrichResultsWithScoring(results, options = {}) {
             const co2 = computeCo2(action.responsesSize || 0, isGreen, {
                 deviceCountry,
                 dcCountry,
+                deviceGco2: typeof options.grid_device_gco2 === 'number' ? options.grid_device_gco2 : undefined,
+                dcGco2: typeof options.grid_dc_gco2 === 'number' ? options.grid_dc_gco2 : undefined,
+                networkGco2: typeof options.grid_network_gco2 === 'number' ? options.grid_network_gco2 : undefined,
+                methodology: options.methodology || 'swdm-v4',
             });
             action.bestPractices.Co2PerVisit = co2.result;
             action.co2PerVisit = co2.value;
@@ -406,6 +410,8 @@ async function enrichResultsWithScoring(results, options = {}) {
             action.co2GreenHosting = co2.greenHosting;
             action.co2Breakdown = co2.breakdown;
             action.co2Model = co2.model;
+            action.co2Methodology = co2.methodology;
+            action.co2MethodologyLabel = co2.methodologyLabel;
             action.co2Per1M = co2.co2Per1M;
             action.waterPer1M = co2.waterPer1M;
             action.energyPer1M = co2.energyPer1M;
@@ -468,6 +474,8 @@ async function enrichResultsWithScoring(results, options = {}) {
         page.co2GreenHosting = lastAction.co2GreenHosting;
         page.co2Breakdown = lastAction.co2Breakdown;
         page.co2Model = lastAction.co2Model;
+        page.co2Methodology = lastAction.co2Methodology;
+        page.co2MethodologyLabel = lastAction.co2MethodologyLabel;
         page.co2FirstVisit = lastAction.co2FirstVisit;
         page.co2CacheWeighted = lastAction.co2CacheWeighted;
         page.co2TransferredKb = lastAction.co2TransferredKb;
@@ -511,6 +519,8 @@ async function enrichResultsWithScoring(results, options = {}) {
     results.co2GreenHosting = lastPage.co2GreenHosting;
     results.co2Breakdown = lastPage.co2Breakdown;
     results.co2Model = lastPage.co2Model;
+    results.co2Methodology = lastPage.co2Methodology;
+    results.co2MethodologyLabel = lastPage.co2MethodologyLabel;
     results.co2FirstVisit = lastPage.co2FirstVisit;
     results.co2CacheWeighted = lastPage.co2CacheWeighted;
     results.co2TransferredKb = lastPage.co2TransferredKb;

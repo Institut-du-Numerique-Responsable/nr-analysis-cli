@@ -136,6 +136,24 @@ yargs(hideBin(process.argv))
                 .option('dc_country', {
                     type: 'string',
                     description: 'ISO 3166-1 alpha-3 country for datacenter/origin grid intensity. Auto-detected via CDN headers + IP geolocation when omitted.',
+                })
+                .option('grid_device_gco2', {
+                    type: 'number',
+                    description: 'Override device grid intensity in gCO₂/kWh (e.g. plug an Electricity Maps yearly value). Takes precedence over country lookup.',
+                })
+                .option('grid_dc_gco2', {
+                    type: 'number',
+                    description: 'Override datacenter grid intensity in gCO₂/kWh.',
+                })
+                .option('grid_network_gco2', {
+                    type: 'number',
+                    description: 'Override network grid intensity in gCO₂/kWh.',
+                })
+                .option('methodology', {
+                    type: 'string',
+                    choices: ['swdm-v4', 'negaoctet'],
+                    description: 'Methodology: swdm-v4 (default, bytes-only) or negaoctet (SWDM v4 + NegaOctet/ARCEP/ADEME French LCA overhead for terminal lifecycle)',
+                    default: 'swdm-v4',
                 });
         },
         (argv) => {
