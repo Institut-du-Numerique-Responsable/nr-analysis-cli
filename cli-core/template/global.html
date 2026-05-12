@@ -225,46 +225,85 @@
                 </div>
             </section>
 
-            <!-- Impact per single visit -->
-            <section class="mb-4">
-                <div class="section-title">{{ labels.impactPerVisit }}</div>
+            <!-- À retenir : 2 indicateurs avec usage -->
+            <section class="panel mb-4">
+                <div class="section-title">{{ labels.kpiHeadline }}</div>
+                <p class="text-muted small mb-3">{{ labels.kpiHeadlineDesc }}</p>
                 <div class="row g-3">
-                    <div class="col-md-4">
-                        <div class="impact-card">
-                            <div class="impact-icon co2"><i class="bi bi-cloud"></i></div>
-                            <div>
-                                <div class="label">{{ labels.co2PerVisitCard }}</div>
-                                <div class="value">{{ values.co2PerVisit }} {{ labels.g }}</div>
-                                <div class="per-visit">Moyenne par scénario</div>
+                    <div class="col-md-6">
+                        <div class="impact-card flex-column align-items-start">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <span class="badge bg-primary">{{ labels.kpiReporting }}</span>
+                                <span class="text-muted small">{{ labels.kpiReportingTag }}</span>
                             </div>
+                            <div class="d-flex gap-4 mb-2">
+                                <div>
+                                    <div class="label">CO₂ / visite</div>
+                                    <div class="value">{{ values.co2PerVisit }} g</div>
+                                </div>
+                                <div>
+                                    <div class="label">Eau / visite</div>
+                                    <div class="value">{{ values.waterClPerVisit }} cL</div>
+                                </div>
+                                <div>
+                                    <div class="label">Énergie / visite</div>
+                                    <div class="value">{{ values.energyWhPerVisit }} Wh</div>
+                                </div>
+                            </div>
+                            <div class="text-muted small mb-2">
+                                Données transférées (1<sup>er</sup> chargement, cache + SW désactivés) :
+                                <strong>{{ values.co2TransferredKb }} Ko</strong>
+                                · hébergement vert : {{#values.co2GreenHosting}}oui{{/values.co2GreenHosting}}{{^values.co2GreenHosting}}non{{/values.co2GreenHosting}}
+                                · long terme avec cache navigateur ≈ <strong>{{ values.co2CacheWeighted }} g</strong>
+                            </div>
+                            <table class="table table-sm small mb-2 mt-1">
+                                <thead>
+                                    <tr><th>Segment</th><th>Pays</th><th>gCO₂/kWh</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>Terminal (visiteur)</td><td>{{ values.co2DeviceCountry }}</td><td>{{ values.co2GridIntensityDevice }}</td></tr>
+                                    <tr><td>Datacenter (origine)</td><td>{{ values.co2DcCountry }} <span class="text-muted">({{ values.co2DcSource }})</span></td><td>{{ values.co2GridIntensityDc }}</td></tr>
+                                    <tr><td>Réseau</td><td>{{ values.co2NetworkCountry }}</td><td>{{ values.co2GridIntensityNetwork }}</td></tr>
+                                </tbody>
+                            </table>
+                            <p class="text-muted small mb-0">{{ labels.kpiReportingHelp }}</p>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="impact-card">
-                            <div class="impact-icon water"><i class="bi bi-droplet-half"></i></div>
-                            <div>
-                                <div class="label">{{ labels.waterPerVisitCard }}</div>
-                                <div class="value">{{ values.waterClPerVisit }} {{ labels.cl }}</div>
-                                <div class="per-visit">WUE 1.8 L/kWh</div>
+                    <div class="col-md-6">
+                        <div class="impact-card flex-column align-items-start">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <span class="badge bg-success">{{ labels.kpiPiloting }}</span>
+                                <span class="text-muted small">{{ labels.kpiPilotingTag }}</span>
                             </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="impact-card">
-                            <div class="impact-icon energy"><i class="bi bi-lightning-charge"></i></div>
-                            <div>
-                                <div class="label">{{ labels.energyPerVisitCard }}</div>
-                                <div class="value">{{ values.energyWhPerVisit }} {{ labels.wh }}</div>
-                                <div class="per-visit">0.81 kWh/Go</div>
+                            <div class="d-flex gap-4 mb-2">
+                                <div>
+                                    <div class="label">Score</div>
+                                    <div class="value">{{ values.ecoIndex }} <span class="grade small {{ values.ecoIndexGrade }}">{{ values.ecoIndexGrade }}</span></div>
+                                </div>
+                                <div>
+                                    <div class="label">CO₂ / visite</div>
+                                    <div class="value">{{ values.ecoIndexCo2PerVisit }} g</div>
+                                </div>
+                                <div>
+                                    <div class="label">Eau / visite</div>
+                                    <div class="value">{{ values.ecoIndexWaterClPerVisit }} cL</div>
+                                </div>
                             </div>
+                            <p class="text-muted small mb-0">{{ labels.kpiPilotingHelp }}</p>
                         </div>
                     </div>
                 </div>
+                <div class="alert alert-info small mt-3 mb-0">
+                    <strong>{{ labels.kpiInterpret }} ·</strong>
+                    {{#values.confHigh}}{{ labels.kpiInterpretHigh }}{{/values.confHigh}}
+                    {{#values.confMedium}}{{ labels.kpiInterpretMedium }}{{/values.confMedium}}
+                    {{#values.confLow}}{{ labels.kpiInterpretLow }}{{/values.confLow}}
+                </div>
             </section>
 
-            <!-- Impact 1M visits -->
+            <!-- Impact 1M visits (SWDM v4 — reporting) -->
             <section class="mb-4">
-                <div class="section-title">{{ labels.impactBlock }}</div>
+                <div class="section-title">{{ labels.impactBlock }} <span class="text-muted small">(SWDM v4 · pour reporting GES)</span></div>
                 <div class="row g-3">
                     <div class="col-md-4">
                         <div class="impact-card">
@@ -272,7 +311,7 @@
                             <div>
                                 <div class="label">{{ labels.co2Per1M }}</div>
                                 <div class="value">{{ values.co2Per1M }} {{ labels.kg }}</div>
-                                <div class="per-visit">Moyenne par scénario</div>
+                                <div class="per-visit">≈ {{ values.co2PerVisit }} g / visite</div>
                             </div>
                         </div>
                     </div>
@@ -282,7 +321,7 @@
                             <div>
                                 <div class="label">{{ labels.waterPer1M }}</div>
                                 <div class="value">{{ values.waterPer1M }} {{ labels.litres }}</div>
-                                <div class="per-visit">SWD · WUE 1.8 L/kWh</div>
+                                <div class="per-visit">≈ {{ values.waterClPerVisit }} cL / visite</div>
                             </div>
                         </div>
                     </div>
@@ -292,7 +331,7 @@
                             <div>
                                 <div class="label">{{ labels.energyPer1M }}</div>
                                 <div class="value">{{ values.energyPer1M }} {{ labels.kWh }}</div>
-                                <div class="per-visit">0.81 kWh/Go</div>
+                                <div class="per-visit">≈ {{ values.energyWhPerVisit }} Wh / visite</div>
                             </div>
                         </div>
                     </div>

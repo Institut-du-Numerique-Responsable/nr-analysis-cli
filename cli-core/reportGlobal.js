@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
-const { createProgressBar, scoreToGrade } = require('./utils');
+const { createProgressBar, scoreToGrade, getEcoIndexGrade } = require('./utils');
+const { computeSynthetic } = require('./synthetic');
 
 const SUBRESULTS_DIRECTORY = path.join(__dirname, '../results');
 
@@ -82,6 +83,23 @@ async function create_global_report(reports, options, translator) {
     let co2PerVisitSum = 0;
     let waterClPerVisitSum = 0;
     let energyWhPerVisitSum = 0;
+    let ecoIndexSum = 0;
+    let ecoIndexCo2PerVisitSum = 0;
+    let ecoIndexWaterClPerVisitSum = 0;
+    let ecoIndexCo2Per1MSum = 0;
+    let ecoIndexWaterPer1MSum = 0;
+    let transferredKbSum = 0;
+    let cacheWeightedSum = 0;
+    let country = 'FRA';
+    let gridIntensity = 0;
+    let greenHosting = false;
+    let deviceCountry = 'FRA';
+    let dcCountry = 'FRA';
+    let dcSource = 'fallback-device';
+    let networkCountry = 'FRA';
+    let gridIntensityDevice = 0;
+    let gridIntensityDc = 0;
+    let gridIntensityNetwork = 0;
     const err = [];
     const worstPages = [];
     const bestPracticesTotal = {};
@@ -113,6 +131,25 @@ async function create_global_report(reports, options, translator) {
             co2PerVisitSum += (lastAct && lastAct.co2PerVisit) || 0;
             waterClPerVisitSum += (lastAct && lastAct.waterClPerVisit) || 0;
             energyWhPerVisitSum += (lastAct && lastAct.energyWhPerVisit) || 0;
+            ecoIndexSum += (lastAct && lastAct.ecoIndex) || 0;
+            ecoIndexCo2PerVisitSum += (lastAct && lastAct.ecoIndexCo2PerVisit) || 0;
+            ecoIndexWaterClPerVisitSum += (lastAct && lastAct.ecoIndexWaterClPerVisit) || 0;
+            ecoIndexCo2Per1MSum += (lastAct && lastAct.ecoIndexCo2Per1M) || 0;
+            ecoIndexWaterPer1MSum += (lastAct && lastAct.ecoIndexWaterPer1M) || 0;
+            transferredKbSum += (lastAct && lastAct.co2TransferredKb) || 0;
+            cacheWeightedSum += (lastAct && lastAct.co2CacheWeighted) || 0;
+            if (lastAct) {
+                country = lastAct.co2Country || country;
+                gridIntensity = lastAct.co2GridIntensity || gridIntensity;
+                if (lastAct.co2GreenHosting) greenHosting = true;
+                deviceCountry = lastAct.co2DeviceCountry || deviceCountry;
+                dcCountry = lastAct.co2DcCountry || dcCountry;
+                dcSource = lastAct.co2DcSource || dcSource;
+                networkCountry = lastAct.co2NetworkCountry || networkCountry;
+                gridIntensityDevice = lastAct.co2GridIntensityDevice || gridIntensityDevice;
+                gridIntensityDc = lastAct.co2GridIntensityDc || gridIntensityDc;
+                gridIntensityNetwork = lastAct.co2GridIntensityNetwork || gridIntensityNetwork;
+            }
             nbBestPracticesToCorrect += obj.nbBestPracticesToCorrect;
             handleWorstPages(obj, worstPages);
             obj.pages.forEach((page) => {
@@ -144,6 +181,11 @@ async function create_global_report(reports, options, translator) {
     const avgCo2PerVisit = nbSuccessful > 0 ? Math.round((co2PerVisitSum / nbSuccessful) * 100) / 100 : 0;
     const avgWaterClPerVisit = nbSuccessful > 0 ? Math.round((waterClPerVisitSum / nbSuccessful) * 100) / 100 : 0;
     const avgEnergyWhPerVisit = nbSuccessful > 0 ? Math.round((energyWhPerVisitSum / nbSuccessful) * 100) / 100 : 0;
+    const avgEcoIndex = nbSuccessful > 0 ? Math.round(ecoIndexSum / nbSuccessful) : 0;
+    const avgEcoIndexCo2PerVisit = nbSuccessful > 0 ? Math.round((ecoIndexCo2PerVisitSum / nbSuccessful) * 100) / 100 : 0;
+    const avgEcoIndexWaterClPerVisit = nbSuccessful > 0 ? Math.round((ecoIndexWaterClPerVisitSum / nbSuccessful) * 100) / 100 : 0;
+    const avgEcoIndexCo2Per1M = nbSuccessful > 0 ? Math.round((ecoIndexCo2Per1MSum / nbSuccessful) * 10) / 10 : 0;
+    const avgEcoIndexWaterPer1M = nbSuccessful > 0 ? Math.round(ecoIndexWaterPer1MSum / nbSuccessful) : 0;
 
     const date = new Date();
     const globalSheet_data = {
@@ -165,6 +207,28 @@ async function create_global_report(reports, options, translator) {
         co2PerVisit: avgCo2PerVisit,
         waterClPerVisit: avgWaterClPerVisit,
         energyWhPerVisit: avgEnergyWhPerVisit,
+        ecoIndex: avgEcoIndex,
+        ecoIndexGrade: getEcoIndexGrade(avgEcoIndex),
+        ecoIndexCo2PerVisit: avgEcoIndexCo2PerVisit,
+        ecoIndexWaterClPerVisit: avgEcoIndexWaterClPerVisit,
+        ecoIndexCo2Per1M: avgEcoIndexCo2Per1M,
+        ecoIndexWaterPer1M: avgEcoIndexWaterPer1M,
+        syntheticConfidence: computeSynthetic(
+            { ecoIndex: avgEcoIndex },
+            { value: avgCo2PerVisit, greenHosting: false, gridIntensity: 0 }
+        ).confidence,
+        co2TransferredKb: nbSuccessful > 0 ? Math.round(transferredKbSum / nbSuccessful) : 0,
+        co2CacheWeighted: nbSuccessful > 0 ? Math.round((cacheWeightedSum / nbSuccessful) * 100) / 100 : 0,
+        co2Country: country,
+        co2GridIntensity: gridIntensity,
+        co2GreenHosting: greenHosting,
+        co2DeviceCountry: deviceCountry,
+        co2DcCountry: dcCountry,
+        co2DcSource: dcSource,
+        co2NetworkCountry: networkCountry,
+        co2GridIntensityDevice: gridIntensityDevice,
+        co2GridIntensityDc: gridIntensityDc,
+        co2GridIntensityNetwork: gridIntensityNetwork,
         bestEnvPages: rankBy(allData, 'sustainabilityScore', 'sustainabilityGrade', WORST_PAGES, false),
         worstEnvPages: rankBy(allData, 'sustainabilityScore', 'sustainabilityGrade', WORST_PAGES, true),
         bestSocialPages: rankBy(allData, 'socialScore', 'socialGrade', WORST_PAGES, false),
