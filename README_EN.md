@@ -450,6 +450,24 @@ nr parseSitemap https://www.example.com/sitemap.xml url.yaml
 
 ---
 
-# Terms of use
+# Licence and terms of use
 
-This tool relies on the GreenIT-Analysis extension API which **does not allow commercial use**.
+This tool is distributed under the **GNU Affero General Public License v3.0 or later (AGPL-3.0-or-later)** — see `LICENSE`.
+
+It embeds components derived from the [GreenIT-Analysis](https://github.com/cnumr/GreenIT-Analysis) Chrome extension (Copyright © 2019 didierfred) and from the [EcoMeter](https://gitlab.com/ecoconceptionweb/ecometer) project (Copyright © 2016), both under AGPL-3.0. See per-file copyright headers in `nr-core/`.
+
+## AGPL implications for users
+
+- ✅ **Commercial use is allowed** (internal or external). AGPL does not forbid sale or for-profit use.
+- ⚠ **Network service deployment** : you must make the source code (including your modifications) available under AGPL-3.0 to anyone interacting with the service (clause §13).
+- ⚠ **Derivative works** : any modification redistributed must remain under AGPL-3.0.
+- ✅ **Internal use without redistribution** : no obligation beyond preserving the copyright headers.
+
+When in doubt, refer to the [official AGPL-3.0 text](https://www.gnu.org/licenses/agpl-3.0.html).
+
+## Credits
+
+- EcoIndex algorithm and ecodesign rules: [GreenIT.fr collective](https://collectif.greenit.fr/), [ecoindex.fr](https://www.ecoindex.fr/).
+- GreenIT-Analysis extension: [cnumr / didierfred](https://github.com/cnumr/GreenIT-Analysis).
+- Sustainable Web Design v4 model: [Green Web Foundation](https://www.thegreenwebfoundation.org/).
+- CLI integration, 2026 refactor, synthetic / NegaOctet / ARCEP / ADEME models: Institut du Numérique Responsable.
