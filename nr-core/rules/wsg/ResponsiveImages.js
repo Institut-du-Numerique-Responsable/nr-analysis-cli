@@ -20,7 +20,9 @@ rulesManager.registerRule({
         images.forEach((img) => {
             if (img.width < 100) return;
             total++;
-            if (img.srcset || img.sizes) {
+            const picture = img.closest && img.closest('picture');
+            const pictureHasSrcset = picture && picture.querySelector('source[srcset]');
+            if (img.srcset || img.sizes || pictureHasSrcset) {
                 withSrcset++;
             } else {
                 this.detailComment += chrome.i18n.getMessage(
