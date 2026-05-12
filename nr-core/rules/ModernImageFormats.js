@@ -7,18 +7,23 @@ rulesManager.registerRule({
     check: function (measures) {
         const modernTypes = ['image/avif', 'image/webp', 'image/jxl'];
         const legacyTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/bmp'];
+        const MODERN_EXT_RE = /\.(?:avif|webp|jxl)(?:\?|#|$)/i;
+        const LEGACY_EXT_RE = /\.(?:jpe?g|png|gif|bmp)(?:\?|#|$)/i;
         let total = 0;
         let modern = 0;
 
         if (measures.entries && measures.entries.length) {
             measures.entries.forEach(function(entry) {
                 const mime = ((entry.response.content.mimeType) || '').split(';')[0].trim();
-                if (modernTypes.includes(mime) || legacyTypes.includes(mime)) {
+                const url = (entry.request && entry.request.url) || '';
+                const isModern = modernTypes.includes(mime) || MODERN_EXT_RE.test(url);
+                const isLegacy = !isModern && (legacyTypes.includes(mime) || LEGACY_EXT_RE.test(url));
+                if (isModern || isLegacy) {
                     total++;
-                    if (modernTypes.includes(mime)) {
+                    if (isModern) {
                         modern++;
                     } else {
-                        this.detailComment += chrome.i18n.getMessage('rule_ModernImageFormats_DetailComment', entry.request.url) + '<br>';
+                        this.detailComment += chrome.i18n.getMessage('rule_ModernImageFormats_DetailComment', url) + '<br>';
                     }
                 }
             }, this);
