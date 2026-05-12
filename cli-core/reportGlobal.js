@@ -100,6 +100,8 @@ async function create_global_report(reports, options, translator) {
     let gridIntensityDevice = 0;
     let gridIntensityDc = 0;
     let gridIntensityNetwork = 0;
+    let methodology = 'swdm-v4';
+    let methodologyLabel = 'SWDM v4 (transferred bytes only)';
     const err = [];
     const worstPages = [];
     const bestPracticesTotal = {};
@@ -149,6 +151,8 @@ async function create_global_report(reports, options, translator) {
                 gridIntensityDevice = lastAct.co2GridIntensityDevice || gridIntensityDevice;
                 gridIntensityDc = lastAct.co2GridIntensityDc || gridIntensityDc;
                 gridIntensityNetwork = lastAct.co2GridIntensityNetwork || gridIntensityNetwork;
+                methodology = lastAct.co2Methodology || methodology;
+                methodologyLabel = lastAct.co2MethodologyLabel || methodologyLabel;
             }
             nbBestPracticesToCorrect += obj.nbBestPracticesToCorrect;
             handleWorstPages(obj, worstPages);
@@ -229,6 +233,8 @@ async function create_global_report(reports, options, translator) {
         co2GridIntensityDevice: gridIntensityDevice,
         co2GridIntensityDc: gridIntensityDc,
         co2GridIntensityNetwork: gridIntensityNetwork,
+        co2Methodology: methodology,
+        co2MethodologyLabel: methodologyLabel,
         bestEnvPages: rankBy(allData, 'sustainabilityScore', 'sustainabilityGrade', WORST_PAGES, false),
         worstEnvPages: rankBy(allData, 'sustainabilityScore', 'sustainabilityGrade', WORST_PAGES, true),
         bestSocialPages: rankBy(allData, 'socialScore', 'socialGrade', WORST_PAGES, false),
