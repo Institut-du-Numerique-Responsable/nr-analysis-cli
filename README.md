@@ -569,7 +569,6 @@ Le rapport HTML contient :
 
 ![Page globale](./docs/rapport-html-global.jpeg)
 ![Page scénario](./docs/rapport-html-detail-page.jpeg)
-![Page scénario avec changement de page](./docs/rapport-html-detail-page-avec-changement-page.jpeg)
 
 #### InfluxDB/Grafana
 
