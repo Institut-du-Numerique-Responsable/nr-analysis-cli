@@ -1,350 +1,393 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
     <head>
-        <!-- Required meta tags -->
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-        <!-- Bootstrap CSS -->
-        <script
-            src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"
-            integrity="sha384-p34f1UUtsS3wqzfto5wAAmdvj+osOnFyQFpp4Ua3gs/ZVWx6oOypYoCJhGGScy+8"
-            crossorigin="anonymous"
-        ></script>
+        <title>{{ labels.header }}</title>
         <link
-            href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css"
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
             rel="stylesheet"
-            integrity="sha384-wEmeIV1mKuiNpC+IOBjI7aAzPcEZeedi5yW5f2yOq55WWLwNGmvvx4Um1vskeMj0"
+            integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
             crossorigin="anonymous"
         />
-        <link
-            href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.2/font/bootstrap-icons.min.css"
-            rel="stylesheet"
-            integrity="sha384-GHL5aQs2BwQUg6AUEbqq6XFSN6lGo8DAT58V5NckuLm9Ibf0uR8i7T+GwodBqcET"
-            crossorigin="anonymous"
-        />
-
-        <style type="text/css">
-            .bi-info {
-                padding: 0.25rem 0.25rem;
-                font-size: 0.875rem;
-                line-height: 0.5;
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+        <style>
+            :root {
+                --bg: #f7f8fb; --ink: #1f2937; --muted: #6b7280;
+                --card: #ffffff; --line: #e5e7eb;
             }
-
-            .pageRow {
-                background-color: #f0f0f0;
-            }
-            .grade {
-                display: inline-block;
-                width: 24px;
-                height: 24px;
-                text-align: center;
-                border-radius: 50%;
-                background-color: #f00;
-                font-size: 14px;
-                font-weight: 650;
-                line-height: 24px;
-            }
-
-            .grade.big-grade {
-                width: 42px;
-                height: 42px;
-                font-size: 28px;
-                line-height: 42px;
-            }
-
-            .grade.A {
-                background-color: #349a47;
-                color: #fff;
-            }
-
-            .grade.B {
-                background-color: #51b84b;
-                color: #fff;
-            }
-
-            .grade.C {
-                background-color: #cadb2a;
-                color: #fff;
-            }
-
-            .grade.D {
-                background-color: #f6eb15;
-            }
-
-            .grade.E {
-                background-color: #fecd06;
-            }
-
-            .grade.F {
-                background-color: #f99839;
-                color: #fff;
-            }
-
-            .grade.G {
-                background-color: #ed2124;
-                color: #fff;
-            }
-            .checkmark-success {
-                position: absolute;
-                transform: rotate(45deg);
-                height: 18px;
-                width: 10px;
-                border-bottom: 5px solid #78b13f;
-                border-right: 5px solid #78b13f;
-                margin-left: 20px;
-            }
-
-            .close-warning,
-            .close-error {
-                position: absolute;
-                width: 16px;
-                height: 16px;
-                padding-left: 20px;
-            }
-            .close-warning:before,
-            .close-warning:after,
-            .close-error:before,
-            .close-error:after {
-                position: absolute;
-                content: ' ';
-                height: 22px;
-                width: 4px;
-            }
-            .close-warning:before,
-            .close-error:before {
-                transform: rotate(45deg);
-            }
-            .close-warning:after,
-            .close-error:after {
-                transform: rotate(-45deg);
-            }
-
-            .close-warning:before,
-            .close-warning:after {
-                background-color: orange;
-            }
-
-            .close-error:before,
-            .close-error:after {
-                background-color: red;
-            }
-            .hiddenRow {
-                padding: 0 !important;
-                max-width: 920px;
-            }
-
-            table[data-priority='1'] tbody tr:not([data-priority='1']) {
-                display: none;
-            }
-            table[data-priority='2'] tbody tr:not([data-priority='2']) {
-                display: none;
-            }
-            table[data-priority='3'] tbody tr:not([data-priority='3']) {
-                display: none;
-            }
-            table[data-priority='4'] tbody tr:not([data-priority='4']) {
-                display: none;
-            }
-            table[data-priority='5'] tbody tr:not([data-priority='5']) {
-                display: none;
-            }
+            body { background: var(--bg); color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif; }
+            .topbar { background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); color: #fff; padding: 1.25rem 0; }
+            .topbar h1 { font-size: 1.05rem; font-weight: 600; margin: 0; opacity: 0.92; }
+            .panel { background: var(--card); border-radius: 14px; border: 1px solid var(--line); padding: 1.5rem; box-shadow: 0 1px 2px rgba(15,23,42,0.04); }
+            .meta-table { font-size: 0.85rem; }
+            .meta-table th { color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.72rem; }
+            .section-title { text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.75rem; color: var(--muted); font-weight: 600; margin-bottom: 0.75rem; }
+            .score-card { position: relative; background: var(--card); border-radius: 18px; padding: 1.75rem; border: 1px solid var(--line); box-shadow: 0 4px 14px rgba(15,23,42,0.06); overflow: hidden; }
+            .score-card .accent { position: absolute; top: 0; left: 0; right: 0; height: 6px; }
+            .score-card.env .accent { background: linear-gradient(90deg,#22c55e,#15803d); }
+            .score-card.social .accent { background: linear-gradient(90deg,#3b82f6,#1e40af); }
+            .score-card.security .accent { background: linear-gradient(90deg,#f43f5e,#9f1239); }
+            .score-card.server .accent { background: linear-gradient(90deg,#14b8a6,#115e59); }
+            .score-card .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); font-weight: 600; }
+            .score-card .title { font-size: 1.05rem; font-weight: 600; margin: 0.25rem 0 0.1rem; }
+            .score-card .subtitle { color: var(--muted); font-size: 0.83rem; margin-bottom: 1.25rem; }
+            .score-display { display: flex; align-items: baseline; gap: 0.5rem; }
+            .score-number { font-size: 3.25rem; font-weight: 700; line-height: 1; }
+            .score-over { color: var(--muted); font-size: 1rem; }
+            .grade { display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 50%; font-size: 1.5rem; font-weight: 700; color: #fff; margin-left: 0.5rem; }
+            .grade.small { width: 24px; height: 24px; font-size: 0.8rem; }
+            .grade.A { background: #15803d; } .grade.B { background: #65a30d; }
+            .grade.C { background: #ca8a04; color:#1f2937; } .grade.D { background: #d97706; }
+            .grade.E { background: #ea580c; } .grade.F { background: #dc2626; } .grade.G { background: #991b1b; }
+            .impact-card { background: var(--card); border-radius: 14px; border: 1px solid var(--line); padding: 1.25rem; display: flex; align-items: center; gap: 1rem; }
+            .impact-icon { width: 52px; height: 52px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; color: #fff; }
+            .impact-icon.co2 { background: linear-gradient(135deg,#f59e0b,#b45309); }
+            .impact-icon.water { background: linear-gradient(135deg,#22d3ee,#0e7490); }
+            .impact-icon.energy { background: linear-gradient(135deg,#a78bfa,#6d28d9); }
+            .impact-card .label { font-size: 0.72rem; text-transform: uppercase; color: var(--muted); letter-spacing: 0.08em; font-weight: 600; }
+            .impact-card .value { font-size: 1.6rem; font-weight: 700; line-height: 1.15; }
+            .impact-card .per-visit { color: var(--muted); font-size: 0.78rem; }
+            .kpi-pill { display: inline-flex; align-items: center; gap: 0.4rem; background: #f1f5f9; padding: 0.25rem 0.7rem; border-radius: 999px; font-size: 0.85rem; font-weight: 600; }
+            .kpi-pill.err { background: #fee2e2; color: #991b1b; }
+            .pageRow { background: #eef2ff !important; font-weight: 600; }
+            .check-desc { color: var(--muted); font-size: 0.78rem; margin-top: 0.2rem; line-height: 1.35; max-width: 520px; }
+            .rank-list { list-style: none; padding: 0; margin: 0; }
+            .rank-list li { display: flex; align-items: center; gap: 0.6rem; padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--line); font-size: 0.9rem; }
+            .rank-list li:last-child { border-bottom: 0; }
+            .rank-list .rank-num { color: var(--muted); font-weight: 700; width: 1.5rem; }
+            .rank-list .rank-url { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .rank-list .rank-url a { color: var(--ink); text-decoration: none; }
+            .rank-list .rank-url a:hover { text-decoration: underline; }
+            .rank-card.best { border-top: 3px solid #16a34a; }
+            .rank-card.worst { border-top: 3px solid #dc2626; }
+            .avg-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+            .checkmark-success { color: #15803d; font-weight: 700; }
+            .checkmark-success::before { content: "✓"; }
+            .close-warning { color: #d97706; font-weight: 700; }
+            .close-warning::before { content: "!"; }
+            .close-error { color: #dc2626; font-weight: 700; }
+            .close-error::before { content: "✕"; }
+            table[data-priority='1'] tbody tr:not([data-priority='1']) { display: none; }
+            table[data-priority='2'] tbody tr:not([data-priority='2']) { display: none; }
+            table[data-priority='3'] tbody tr:not([data-priority='3']) { display: none; }
+            table[data-priority='4'] tbody tr:not([data-priority='4']) { display: none; }
+            table[data-priority='5'] tbody tr:not([data-priority='5']) { display: none; }
         </style>
-
         <script>
             function setTablePriority(priority) {
                 document.getElementById('tabBestPractices').setAttribute('data-priority', priority);
             }
         </script>
-
-        <title>{{ labels.header }}</title>
     </head>
-
     <body>
-        <nav class="navbar navbar-success bg-success text-white mb-4">
-            <div class="container-fluid">
-                <span class="navbar-brand mb-0 h1" style="font-size: 1rem">{{ labels.header }}</span>
-            </div>
-        </nav>
-        <div class="container">
+        <header class="topbar">
             <div class="container">
-                <table id="tabInformations" class="table table-bordered text-center my-3">
-                    <thead class="table-light">
-                        <th scope="col">{{ labels.executionDate }}</th>
-                        <th scope="col">{{ labels.hostname }}</th>
-                        <th scope="col">{{ labels.platform }}</th>
-                        <th scope="col">{{ labels.connection }}</th>
+                <h1>{{ labels.header }}</h1>
+            </div>
+        </header>
+
+        <main class="container my-4">
+            <!-- Context meta -->
+            <section class="panel mb-4 meta-table">
+                <div class="row text-center">
+                    <div class="col"><div class="text-uppercase text-muted small">{{ labels.executionDate }}</div><div>{{ values.date }}</div></div>
+                    <div class="col"><div class="text-uppercase text-muted small">{{ labels.hostname }}</div><div>{{ values.hostname }}</div></div>
+                    <div class="col"><div class="text-uppercase text-muted small">{{ labels.platform }}</div><div>{{ values.device }}</div></div>
+                    <div class="col"><div class="text-uppercase text-muted small">{{ labels.connection }}</div><div>{{ values.connection }}</div></div>
+                    <div class="col"><div class="text-uppercase text-muted small">{{ labels.scenarios }}</div><div><span class="kpi-pill">{{ values.nbScenarios }}</span></div></div>
+                    <div class="col"><div class="text-uppercase text-muted small">{{ labels.errors }}</div><div><span class="kpi-pill {{#values.nbErrors}}err{{/values.nbErrors}}">{{ values.nbErrors }}</span></div></div>
+                </div>
+            </section>
+
+            <!-- Score duo -->
+            <section class="mb-4">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="score-card env">
+                            <div class="accent"></div>
+                            <div class="label">{{ labels.perfBlock }}</div>
+                            <div class="title">{{ labels.envScore }}</div>
+                            <div class="subtitle">{{ labels.envScoreSubtitle }} · <span class="avg-label">{{ labels.avgScore }}</span></div>
+                            <div class="score-display">
+                                <span class="score-number">{{ values.avgEnvScore }}</span>
+                                <span class="score-over">/100</span>
+                                <span class="grade {{ values.avgEnvGrade }}">{{ values.avgEnvGrade }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="score-card social">
+                            <div class="accent"></div>
+                            <div class="label">{{ labels.a11yBlock }}</div>
+                            <div class="title">{{ labels.socialScore }}</div>
+                            <div class="subtitle">{{ labels.socialScoreSubtitle }} · <span class="avg-label">{{ labels.avgScore }}</span></div>
+                            <div class="score-display">
+                                <span class="score-number">{{ values.avgSocialScore }}</span>
+                                <span class="score-over">/100</span>
+                                <span class="grade {{ values.avgSocialGrade }}">{{ values.avgSocialGrade }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="score-card security">
+                            <div class="accent"></div>
+                            <div class="label">{{ labels.cyberBlock }}</div>
+                            <div class="title">{{ labels.securityScore }}</div>
+                            <div class="subtitle">{{ labels.securityScoreSubtitle }} · <span class="avg-label">{{ labels.avgScore }}</span></div>
+                            <div class="score-display">
+                                <span class="score-number">{{ values.avgSecurityScore }}</span>
+                                <span class="score-over">/100</span>
+                                <span class="grade {{ values.avgSecurityGrade }}">{{ values.avgSecurityGrade }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="score-card server">
+                            <div class="accent"></div>
+                            <div class="label">{{ labels.serverBlock }}</div>
+                            <div class="title">{{ labels.serverScore }}</div>
+                            <div class="subtitle">{{ labels.serverScoreSubtitle }} · <span class="avg-label">{{ labels.avgScore }}</span></div>
+                            <div class="score-display">
+                                <span class="score-number">{{ values.avgServerScore }}</span>
+                                <span class="score-over">/100</span>
+                                <span class="grade {{ values.avgServerGrade }}">{{ values.avgServerGrade }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Rankings -->
+            <section class="mb-4">
+                <div class="section-title">{{ labels.rankings }}</div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="panel rank-card best">
+                            <div class="label avg-label mb-2">🏆 {{ labels.bestEnvPages }}</div>
+                            <ul class="rank-list">
+                                {{#values.bestEnvPages}}
+                                <li>
+                                    <span class="rank-num">#{{ nb }}</span>
+                                    <span class="rank-url"><a href="{{ url }}" target="_blank" rel="noopener" title="Voir le site">{{ url }}</a></span>
+                                    <span>{{ score }} <span class="grade small {{ grade }}">{{ grade }}</span></span>
+                                    {{#detailFile}}<a href="{{ detailFile }}" class="btn btn-sm btn-outline-secondary" title="Rapport détaillé"><i class="bi bi-file-earmark-bar-graph"></i></a>{{/detailFile}}
+                                </li>
+                                {{/values.bestEnvPages}}
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="panel rank-card worst">
+                            <div class="label avg-label mb-2">⚠️ {{ labels.worstEnvPages }}</div>
+                            <ul class="rank-list">
+                                {{#values.worstEnvPages}}
+                                <li>
+                                    <span class="rank-num">#{{ nb }}</span>
+                                    <span class="rank-url"><a href="{{ url }}" target="_blank" rel="noopener" title="Voir le site">{{ url }}</a></span>
+                                    <span>{{ score }} <span class="grade small {{ grade }}">{{ grade }}</span></span>
+                                    {{#detailFile}}<a href="{{ detailFile }}" class="btn btn-sm btn-outline-secondary" title="Rapport détaillé"><i class="bi bi-file-earmark-bar-graph"></i></a>{{/detailFile}}
+                                </li>
+                                {{/values.worstEnvPages}}
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="panel rank-card best">
+                            <div class="label avg-label mb-2">🏆 {{ labels.bestSocialPages }}</div>
+                            <ul class="rank-list">
+                                {{#values.bestSocialPages}}
+                                <li>
+                                    <span class="rank-num">#{{ nb }}</span>
+                                    <span class="rank-url"><a href="{{ url }}" target="_blank" rel="noopener" title="Voir le site">{{ url }}</a></span>
+                                    <span>{{ score }} <span class="grade small {{ grade }}">{{ grade }}</span></span>
+                                    {{#detailFile}}<a href="{{ detailFile }}" class="btn btn-sm btn-outline-secondary" title="Rapport détaillé"><i class="bi bi-file-earmark-bar-graph"></i></a>{{/detailFile}}
+                                </li>
+                                {{/values.bestSocialPages}}
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="panel rank-card worst">
+                            <div class="label avg-label mb-2">⚠️ {{ labels.worstSocialPages }}</div>
+                            <ul class="rank-list">
+                                {{#values.worstSocialPages}}
+                                <li>
+                                    <span class="rank-num">#{{ nb }}</span>
+                                    <span class="rank-url"><a href="{{ url }}" target="_blank" rel="noopener" title="Voir le site">{{ url }}</a></span>
+                                    <span>{{ score }} <span class="grade small {{ grade }}">{{ grade }}</span></span>
+                                    {{#detailFile}}<a href="{{ detailFile }}" class="btn btn-sm btn-outline-secondary" title="Rapport détaillé"><i class="bi bi-file-earmark-bar-graph"></i></a>{{/detailFile}}
+                                </li>
+                                {{/values.worstSocialPages}}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Impact per single visit -->
+            <section class="mb-4">
+                <div class="section-title">{{ labels.impactPerVisit }}</div>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="impact-card">
+                            <div class="impact-icon co2"><i class="bi bi-cloud"></i></div>
+                            <div>
+                                <div class="label">{{ labels.co2PerVisitCard }}</div>
+                                <div class="value">{{ values.co2PerVisit }} {{ labels.g }}</div>
+                                <div class="per-visit">Moyenne par scénario</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="impact-card">
+                            <div class="impact-icon water"><i class="bi bi-droplet-half"></i></div>
+                            <div>
+                                <div class="label">{{ labels.waterPerVisitCard }}</div>
+                                <div class="value">{{ values.waterClPerVisit }} {{ labels.cl }}</div>
+                                <div class="per-visit">WUE 1.8 L/kWh</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="impact-card">
+                            <div class="impact-icon energy"><i class="bi bi-lightning-charge"></i></div>
+                            <div>
+                                <div class="label">{{ labels.energyPerVisitCard }}</div>
+                                <div class="value">{{ values.energyWhPerVisit }} {{ labels.wh }}</div>
+                                <div class="per-visit">0.81 kWh/Go</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Impact 1M visits -->
+            <section class="mb-4">
+                <div class="section-title">{{ labels.impactBlock }}</div>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="impact-card">
+                            <div class="impact-icon co2"><i class="bi bi-cloud"></i></div>
+                            <div>
+                                <div class="label">{{ labels.co2Per1M }}</div>
+                                <div class="value">{{ values.co2Per1M }} {{ labels.kg }}</div>
+                                <div class="per-visit">Moyenne par scénario</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="impact-card">
+                            <div class="impact-icon water"><i class="bi bi-droplet-half"></i></div>
+                            <div>
+                                <div class="label">{{ labels.waterPer1M }}</div>
+                                <div class="value">{{ values.waterPer1M }} {{ labels.litres }}</div>
+                                <div class="per-visit">SWD · WUE 1.8 L/kWh</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="impact-card">
+                            <div class="impact-icon energy"><i class="bi bi-lightning-charge"></i></div>
+                            <div>
+                                <div class="label">{{ labels.energyPer1M }}</div>
+                                <div class="value">{{ values.energyPer1M }} {{ labels.kWh }}</div>
+                                <div class="per-visit">0.81 kWh/Go</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Pages table -->
+            <section class="panel mb-4">
+                <div class="section-title">{{ labels.scenarios }}</div>
+                <div class="table-responsive">
+                    <table id="tabPages" class="table table-sm align-middle">
+                        <thead>
+                            <tr>
+                                <th>{{ labels.scenario }}</th>
+                                <th>{{ labels.envScore }}</th>
+                                <th>{{ labels.socialScore }}</th>
+                                <th>{{ labels.co2PerVisit }}</th>
+                                <th>{{ labels.bestPracticesToImplement }}</th>
+                                {{#values.grafanaLinkPresent}}<th></th>{{/values.grafanaLinkPresent}}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#values.allReportsVariables}}
+                                <tr class="{{ cssRowError }}">
+                                    <td colspan="5">
+                                        {{{ link }}}
+                                        <a class="btn btn-sm btn-outline-primary ms-2" href="{{ filename }}">{{ labels.pageDetail }} <i class="bi bi-arrow-right"></i></a>
+                                    </td>
+                                </tr>
+                                {{#pages}}
+                                <tr class="pageRow {{ cssRowError }}">
+                                    <td>↳ {{ name }}</td>
+                                    {{^success}}
+                                    <td colspan="4">{{ labels.error }}</td>
+                                    {{/success}}
+                                    {{#success}}
+                                    <td>{{ lastScore }} <span class="grade small {{ lastGrade }}">{{ lastGrade }}</span></td>
+                                    <td>{{ socialScore }} <span class="grade small {{ socialGrade }}">{{ socialGrade }}</span></td>
+                                    <td>{{ co2PerVisit }}</td>
+                                    <td>{{ nbBestPracticesToCorrect }}</td>
+                                    {{#values.grafanaLinkPresent}}<td><a href="{{grafanaLink}}">{{ labels.trend }}</a></td>{{/values.grafanaLinkPresent}}
+                                    {{/success}}
+                                </tr>
+                                {{/pages}}
+                            {{/values.allReportsVariables}}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Best practices -->
+            <section class="panel">
+                <div class="section-title">{{ labels.bestPractices }}</div>
+                <div class="mb-3">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setTablePriority('all')">{{ labels.allPriorities }}</button>
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="setTablePriority(5)">P5</button>
+                    <button type="button" class="btn btn-sm btn-outline-warning" onclick="setTablePriority(4)">P4</button>
+                    <button type="button" class="btn btn-sm btn-outline-info" onclick="setTablePriority(3)">P3</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setTablePriority(2)">P2</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setTablePriority(1)">P1</button>
+                </div>
+                <table id="tabBestPractices" class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>{{ labels.bestPractice }}</th>
+                            <th>{{ labels.effort }}</th>
+                            <th>{{ labels.impact }}</th>
+                            <th>{{ labels.priority }}</th>
+                            <th>{{ labels.note }}</th>
+                        </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td id="date">{{ values.date }}</td>
-                            <td id="hostname">{{ values.hostname }}</td>
-                            <td id="device">{{ values.device }}</td>
-                            <td id="connection">{{ values.connection }}</td>
+                        {{#values.bestsPractices}}
+                        <tr data-priority="{{ priority }}">
+                            <td>
+                                <strong>{{ name }}</strong>
+                                <div class="check-desc">{{ description }}</div>
+                            </td>
+                            <td>{{ effort }}</td>
+                            <td>{{ impact }}</td>
+                            <td>{{ priority }}</td>
+                            <td class="text-center"><span class="{{ note }}"></span></td>
                         </tr>
+                        {{/values.bestsPractices}}
                     </tbody>
                 </table>
-            </div>
+            </section>
+        </main>
 
-            <div class="container my-5">
-                <div class="row text-center justify-content-center">
-                    <div class="col col-md-3">
-                        <div class="card mb-3 border-primary" style="max-width: 18rem">
-                            <div class="card-header bg-primary text-white">{{ labels.scenarios }}</div>
-                            <div class="card-body text-dark">
-                                <h1 id="nbScenarios" class="card-title" style="height: 45px">{{ values.nbScenarios }}</h1>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col col-md-3">
-                        <div class="card mb-3 border-danger" style="max-width: 18rem">
-                            <div class="card-header bg-danger text-white">{{ labels.errors }}</div>
-                            <div class="card-body text-dark">
-                                <h1 id="nbErrors" class="card-title">{{ values.nbErrors }}</h1>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="container my-3">
-                <div class="row">
-                    <div class="col col-md-12">
-                        <table id="tabPages" class="table table-sm">
-                            <thead class="table-light" style="text-align: center; vertical-align: middle">
-                                <th scope="col" class="col col-md-5">{{ labels.scenario }}</th>
-                                <th scope="col" class="col col-md-1">
-                                    <button
-                                        class="btn-primary bi bi-info rounded-circle"
-                                        onclick='alert("{{ tooltips.sustainabilityScore }}");'>
-                                    </button>
-                                    &nbsp;{{ labels.sustainabilityScore }}
-                                </th>
-                                <th scope="col" class="col col-md-1">
-                                    <button
-                                        class="btn-primary bi bi-info rounded-circle"
-                                        onclick='alert("{{ tooltips.shareDueToActions }}");'>
-                                    </button>
-                                    &nbsp;{{ labels.shareDueToActions }}
-                                </th>
-                                <th scope="col" class="col col-md-1">{{ labels.co2PerVisit }}</th>
-                                <th scope="col" class="col col-md-2">
-                                    <button
-                                        class="btn-primary bi bi-info rounded-circle"
-                                        onclick='alert("{{ tooltips.bestPracticesToImplement }}");'>
-                                    </button>
-                                    &nbsp;{{ labels.bestPracticesToImplement }}
-                                </th>
-                                {{#values.grafanaLinkPresent}}
-                                <th scope="col" class="col col-md-1"></th>
-                                {{/values.grafanaLinkPresent}}
-                            </thead>
-                            <tbody class="text-center">
-                                {{#values.allReportsVariables}}
-                                    <tr class="{{ cssRowError }} text-start">
-                                        <td colspan="5">{{{ link }}}</td>
-                                    </tr>
-                                    {{#pages}}
-                                    <tr class="pageRow {{ cssRowError }}">
-                                        <td class="col col-md-5 text-start"> > {{ name }}</td>
-                                        {{^success}}
-                                        <td colspan="4">{{ labels.error }}</td>
-                                        {{/success}}
-                                        {{#success}}
-                                        <td class="col col-md-1">
-                                            {{ lastScore }}&nbsp;<span class="grade {{ lastGrade }}">{{ lastGrade }}</span>
-                                        </td>
-                                        <td class="col col-md-1">{{ deltaScore }}</td>
-                                        <td class="col col-md-1">{{ co2PerVisit }}</td>
-                                        <td class="col col-md-2">{{ nbBestPracticesToCorrect }}</td>
-                                        {{#values.grafanaLinkPresent}}
-                                        <td class="col col-md-1">
-                                            <a href="{{grafanaLink}}">{{ labels.trend }}</a>
-                                        </td>
-                                        {{/values.grafanaLinkPresent}}
-                                        {{/success}}
-                                    </tr>
-                                    {{/pages}}
-                                {{/values.allReportsVariables}}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <div class="container my-3">
-                <h5 class="mb-3">{{ labels.bestPractices }}</h5>
-                <div style="margin-bottom: 10px">
-                    <button type="button" class="btn btn-outline-primary" onclick="setTablePriority(5)">
-                        {{ labels.priority }} 5/5
-                    </button>
-                    <button type="button" class="btn btn-outline-secondary" onclick="setTablePriority(4)">
-                        {{ labels.priority }} 4/5
-                    </button>
-                    <button type="button" class="btn btn-outline-success" onclick="setTablePriority(3)">
-                        {{ labels.priority }} 3/5
-                    </button>
-                    <button type="button" class="btn btn-outline-danger" onclick="setTablePriority(2)">
-                        {{ labels.priority }} 2/5
-                    </button>
-                    <button type="button" class="btn btn-outline-warning" onclick="setTablePriority(1)">
-                        {{ labels.priority }} 1/5
-                    </button>
-                    <button type="button" class="btn btn-outline-info" onclick="setTablePriority('all')">
-                        {{ labels.allPriorities }}
-                    </button>
-                </div>
-                <div class="row">
-                    <div class="col col-md-12">
-                        <table id="tabBestPractices" class="table table-sm">
-                            <thead class="table-light">
-                                <th scope="col">{{ labels.bestPractice }}</th>
-                                <th scope="col">{{ labels.effort }}</th>
-                                <th scope="col">{{ labels.impact }}</th>
-                                <th scope="col">{{ labels.priority }}</th>
-                                <th scope="col">{{ labels.note }}</th>
-                            </thead>
-                            <tbody>
-                                {{#values.bestsPractices}}
-                                <tr data-priority="{{ priority }}">
-                                    <td title="{{ description }}">
-                                        <button
-                                            class="btn-primary bi bi-info rounded-circle"
-                                            onclick='alert("{{ description }}");'>
-                                        </button>
-                                        <span>{{ name }}</span>
-                                    </td>
-                                    <td>{{ effort }}</td>
-                                    <td>{{ impact }}</td>
-                                    <td>{{ priority }}</td>
-                                    <td class="text-center">
-                                        <div class="{{ note }}"></div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td colspan="6" class="hiddenRow">
-                                        <div class="collapse" id="{{ id }}">
-                                            {{#errors}} {{ scenario }}
-                                            <div class="card card-body">{{{ errors }}}</div>
-                                            {{/errors}}
-                                        </div>
-                                    </td>
-                                </tr>
-                                {{/values.bestsPractices}}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="card-footer bg-success text-white">
-            <small>
-                <ul>
-                    <li>{{ labels.footerEcoIndex }} <a class="text-white" href="https://www.ecoindex.fr/comment-ca-marche/">https://www.ecoindex.fr/comment-ca-marche/</a></li>
-                    <li>{{ labels.footerBestPractices }} <a class="text-white" href="https://github.com/cnumr/best-practices">https://github.com/cnumr/best-practices</a></li>
-                </ul>
-            </small>
-        </div>
+        <footer class="container my-4 text-muted small">
+            <ul>
+                <li>{{ labels.footerEcoIndex }} <a href="https://www.ecoindex.fr/comment-ca-marche/">ecoindex.fr</a></li>
+                <li>{{ labels.footerBestPractices }} <a href="https://github.com/cnumr/best-practices">cnumr/best-practices</a></li>
+                <li>Moteur a11y inspiré de <a href="https://gitlab.tanaguru.com/open-source/tanaguru2020-engine">Tanaguru 2020</a> · RGAA 4 / WCAG 2.1</li>
+            </ul>
+        </footer>
     </body>
 </html>
