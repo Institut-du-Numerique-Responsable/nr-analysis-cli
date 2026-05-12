@@ -199,14 +199,14 @@ nr analyse urls.txt
 
 Sorties générées dans le dossier `resultat/` à la racine du dépôt :
 
-Les fichiers sont préfixés par la date (`YYYYMMDDHH`) et le hostname du premier site afin de ne pas écraser les audits précédents.
+Les fichiers sont préfixés par la date (`YYYYMMDDHHMM`) et le hostname du premier site afin de ne pas écraser les audits précédents.
 
 | Fichier | Contenu |
 | ------- | ------- |
 | `resultat/<date>_<host>_index.html` | Rapport global : moyennes env + social + cyber + serveur, KPIs CO₂ / eau / énergie pour 1 M visites, classements top/flop, table des pages |
 | `resultat/<date>_<host>_<n>.html` | Rapport détaillé de chaque page auditée (a11y, bonnes pratiques, étapes, contrôles cyber + serveur) |
 
-Exemple : `resultat/2026051120_isit-europe.org_index.html`
+Exemple : `resultat/202605120945_isit-europe.org_index.html`
 
 Ouvrir le rapport :
 

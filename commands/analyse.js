@@ -12,7 +12,7 @@ const { translator } = require('../cli-core/translator.js');
 
 function datePrefix(d = new Date()) {
     const pad = (n) => String(n).padStart(2, '0');
-    return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}${pad(d.getHours())}`;
+    return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}${pad(d.getHours())}${pad(d.getMinutes())}`;
 }
 
 function slugifyHost(host) {
