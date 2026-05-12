@@ -1,0 +1,14 @@
+# nr-analysis-cli — liste plate d'URLs à auditer
+#
+# Format :
+#   - une URL par ligne
+#   - lignes vides ignorées
+#   - tout ce qui suit # est un commentaire
+#
+# Exemple : audit du site ISIT Europe (FR)
+
+https://isit-europe.org/fr/
+https://isit-europe.org/fr/a-propos/
+https://isit-europe.org/fr/nos-engagements/
+https://isit-europe.org/fr/nos-services/
+https://isit-europe.org/fr/contact/
