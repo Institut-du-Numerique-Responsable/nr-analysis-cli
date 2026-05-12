@@ -799,6 +799,24 @@ En plus des règles, l'outil estime pour chaque page :
 
 ---
 
-# Conditions d'utilisation
+# Licence et conditions d'utilisation
 
-Cet outil s'appuie sur l'API de l'extension GreenIT-Analysis qui **ne permet pas une utilisation à des fins commerciales**.
+Cet outil est distribué sous licence **GNU Affero General Public License v3.0 ou ultérieure (AGPL-3.0-or-later)** — voir `LICENSE`.
+
+Il intègre des composants dérivés de l'extension Chrome [GreenIT-Analysis](https://github.com/cnumr/GreenIT-Analysis) (Copyright © 2019 didierfred) et du projet [EcoMeter](https://gitlab.com/ecoconceptionweb/ecometer) (Copyright © 2016), tous deux sous AGPL-3.0. Voir les en-têtes de fichiers dans `nr-core/`.
+
+## Implications AGPL pour les utilisateurs
+
+- ✅ **Usage commercial autorisé** (interne ou externe). L'AGPL n'interdit pas la vente ni l'usage à but lucratif.
+- ⚠ **Distribution / déploiement comme service réseau** : vous devez rendre disponible le code source (y compris vos modifications) à toute personne interagissant avec le service, sous AGPL-3.0 (clause §13).
+- ⚠ **Œuvres dérivées** : toute modification redistribuée doit rester sous AGPL-3.0.
+- ✅ **Usage interne sans redistribution** : aucune obligation supplémentaire au-delà du respect des en-têtes de copyright.
+
+En cas de doute, consulter le [texte officiel AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.html).
+
+## Crédits
+
+- Algorithme EcoIndex et règles d'éco-conception : [collectif GreenIT.fr](https://collectif.greenit.fr/), [ecoindex.fr](https://www.ecoindex.fr/).
+- Extension GreenIT-Analysis : [cnumr / didierfred](https://github.com/cnumr/GreenIT-Analysis).
+- Modèle Sustainable Web Design v4 : [Green Web Foundation](https://www.thegreenwebfoundation.org/).
+- Intégration CLI, refonte 2026, modèles synthétique / NegaOctet / ARCEP / ADEME : Institut du Numérique Responsable.
