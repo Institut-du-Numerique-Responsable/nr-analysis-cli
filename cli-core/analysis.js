@@ -6,6 +6,9 @@ const sizes = require('../sizes.js');
 const { createProgressBar } = require('./utils');
 const { checkGreenHosting, computeCo2 } = require('./co2Client');
 const { computeScore } = require('./scoring');
+const { computeSocialScore } = require('./socialScoring');
+const { auditServer } = require('./serverAudit');
+const { computeSecurityScore, computeServerScore } = require('./auditScoring');
 
 const SUBRESULTS_DIRECTORY = path.join(__dirname, '../results');
 
@@ -329,6 +332,25 @@ async function enrichResultsWithScoring(results) {
         .split('/')[0];
     const greenHostingResult = await checkGreenHosting(domain);
 
+    let serverAuditResult = null;
+    try {
+        serverAuditResult = await auditServer(results.pageInformations.url);
+    } catch (e) {
+        serverAuditResult = null;
+    }
+    const securityScoring = computeSecurityScore(serverAuditResult && serverAuditResult.security);
+    const serverScoring = computeServerScore(serverAuditResult && serverAuditResult.server);
+    results.security = serverAuditResult ? serverAuditResult.security : null;
+    results.server = serverAuditResult ? serverAuditResult.server : null;
+    results.securityScore = securityScoring.score;
+    results.securityGrade = securityScoring.grade;
+    results.securitySummary = securityScoring.summary;
+    results.securityIssues = securityScoring.issues;
+    results.serverScore = serverScoring.score;
+    results.serverGrade = serverScoring.grade;
+    results.serverSummary = serverScoring.summary;
+    results.serverIssues = serverScoring.issues;
+
     results.pages.forEach((page) => {
         page.actions.forEach((action) => {
             if (!action.bestPractices) return;
@@ -338,11 +360,23 @@ async function enrichResultsWithScoring(results) {
             const co2 = computeCo2(action.responsesSize || 0, isGreen);
             action.bestPractices.Co2PerVisit = co2.result;
             action.co2PerVisit = co2.value;
+            action.co2Per1M = co2.co2Per1M;
+            action.waterPer1M = co2.waterPer1M;
+            action.energyPer1M = co2.energyPer1M;
+            action.waterPerVisit = co2.waterPerVisit;
+            action.waterClPerVisit = co2.waterClPerVisit;
+            action.energyWhPerVisit = co2.energyWhPerVisit;
 
             const scoring = computeScore(action.bestPractices);
             action.sustainabilityScore = scoring.score;
             action.sustainabilityGrade = scoring.grade;
             action.scoreByCategory = scoring.byCategory;
+
+            const social = computeSocialScore(action.a11y);
+            action.socialScore = social.score;
+            action.socialGrade = social.grade;
+            action.a11ySummary = social.summary;
+            action.a11yIssues = social.issues;
         });
 
         const lastAction = page.actions[page.actions.length - 1];
@@ -350,11 +384,27 @@ async function enrichResultsWithScoring(results) {
         page.sustainabilityGrade = lastAction.sustainabilityGrade;
         page.scoreByCategory = lastAction.scoreByCategory;
         page.co2PerVisit = lastAction.co2PerVisit;
+        page.co2Per1M = lastAction.co2Per1M;
+        page.waterPer1M = lastAction.waterPer1M;
+        page.energyPer1M = lastAction.energyPer1M;
+        page.waterClPerVisit = lastAction.waterClPerVisit;
+        page.energyWhPerVisit = lastAction.energyWhPerVisit;
+        page.socialScore = lastAction.socialScore;
+        page.socialGrade = lastAction.socialGrade;
+        page.a11ySummary = lastAction.a11ySummary;
+        page.a11yIssues = lastAction.a11yIssues;
     });
 
     const lastPage = results.pages[results.pages.length - 1];
     results.sustainabilityScore = lastPage.sustainabilityScore;
     results.sustainabilityGrade = lastPage.sustainabilityGrade;
+    results.socialScore = lastPage.socialScore;
+    results.socialGrade = lastPage.socialGrade;
+    results.co2Per1M = lastPage.co2Per1M;
+    results.waterPer1M = lastPage.waterPer1M;
+    results.energyPer1M = lastPage.energyPer1M;
+    results.waterClPerVisit = lastPage.waterClPerVisit;
+    results.energyWhPerVisit = lastPage.energyWhPerVisit;
 }
 
 async function createJsonReports(browser, pagesInformations, options, proxy, headers, translator) {

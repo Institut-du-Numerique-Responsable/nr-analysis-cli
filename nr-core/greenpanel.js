@@ -73,6 +73,7 @@ function MeasuresAcquisition(rules) {
             preloadCount: 0,
             renderBlockingScriptsCount: 0,
             externalIframesCount: 0,
+            a11y: null,
         };
     };
 
@@ -113,6 +114,7 @@ function MeasuresAcquisition(rules) {
             measures.preloadCount += frameMeasures.preloadCount || 0;
             measures.renderBlockingScriptsCount += frameMeasures.renderBlockingScriptsCount || 0;
             measures.externalIframesCount += frameMeasures.externalIframesCount || 0;
+            if (frameMeasures.a11y) measures.a11y = frameMeasures.a11y;
 
             localRulesChecker.sendEvent('frameMeasuresReceived', measures);
         }
