@@ -23,6 +23,7 @@ async function analyseScenario(browser, pageInformations, options, translator, p
     const TRY_NB = options.tryNb || 1;
     const DEVICE = options.device || 'desktop';
     const PROXY = options.proxy;
+    const WAIT_UNTIL = options.waitUntil || 'domcontentloaded';
     const LANGUAGE = options.language;
 
     try {
@@ -50,7 +51,7 @@ async function analyseScenario(browser, pageInformations, options, translator, p
         }
 
         // Execute actions on page (click, text, ...)
-        let pages = await startActions(page, pageInformations, TIMEOUT, translator, pageLoadingLabel);
+        let pages = await startActions(page, pageInformations, TIMEOUT, translator, pageLoadingLabel, WAIT_UNTIL);
 
         scenarioResult.pages = pages;
         scenarioResult.success = true;
@@ -100,12 +101,12 @@ function isValidWaitForNavigation(waitUntilParam) {
  * @param {*} translator
  * @param {string} pageLoadingLabel
  */
-async function startActions(page, pageInformations, timeout, translator, pageLoadingLabel) {
+async function startActions(page, pageInformations, timeout, translator, pageLoadingLabel, waitUntil = 'domcontentloaded') {
     const pptrHar = new PuppeteerHar(page);
     await pptrHar.start();
 
     // Navigate to the URL then take the initial snapshot
-    await doFirstAction(page, pageInformations, timeout);
+    await doFirstAction(page, pageInformations, timeout, waitUntil);
     let actionResult = await doAnalysis(page, pptrHar, pageLoadingLabel, translator);
 
     let actionsResultsForAPage = [actionResult];
@@ -176,9 +177,9 @@ async function startActions(page, pageInformations, timeout, translator, pageLoa
     return pagesResults;
 }
 
-async function doFirstAction(page, pageInformations, timeout) {
+async function doFirstAction(page, pageInformations, timeout, waitUntil = 'domcontentloaded') {
     try {
-        await page.goto(pageInformations.url, { timeout });
+        await page.goto(pageInformations.url, { timeout, waitUntil });
         await waitPageLoading(page, pageInformations, timeout);
     } finally {
         // Take screenshot even if the page fails to load
@@ -391,7 +392,7 @@ async function enrichResultsWithScoring(results, options = {}) {
                 deviceGco2: typeof options.grid_device_gco2 === 'number' ? options.grid_device_gco2 : undefined,
                 dcGco2: typeof options.grid_dc_gco2 === 'number' ? options.grid_dc_gco2 : undefined,
                 networkGco2: typeof options.grid_network_gco2 === 'number' ? options.grid_network_gco2 : undefined,
-                methodology: options.methodology || 'swdm-v4',
+                methodology: options.methodology || 'negaoctet',
             });
             action.bestPractices.Co2PerVisit = co2.result;
             action.co2PerVisit = co2.value;
@@ -539,6 +540,7 @@ async function createJsonReports(browser, pagesInformations, options, proxy, hea
     const RETRY = options.retry;
     const DEVICE = options.device;
     const LANGUAGE = options.language;
+    const WAIT_UNTIL = options.waitUntil || 'domcontentloaded';
 
     const progressBar = createProgressBar(options, pagesInformations.length + 2, 'Analysing', 'Analysing ...');
     const asyncFunctions = [];
@@ -574,6 +576,7 @@ async function createJsonReports(browser, pagesInformations, options, proxy, hea
                 headers,
                 index: scenarioIndex,
                 language: LANGUAGE,
+                waitUntil: WAIT_UNTIL,
                 ...extra,
             },
             translator,
@@ -605,6 +608,7 @@ async function createJsonReports(browser, pagesInformations, options, proxy, hea
                         headers,
                         index: results.index,
                         language: LANGUAGE,
+                        waitUntil: WAIT_UNTIL,
                     },
                     translator,
                     pageLoadingLabel

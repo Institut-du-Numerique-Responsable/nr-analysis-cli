@@ -110,7 +110,7 @@ Le rapport HTML s'ouvre dans n'importe quel navigateur (`open` sur macOS, `xdg-o
 
 ### Commande type — audit crawl complet d'un site français
 
-Cas typique : crawler automatiquement un site grand public hébergé/consulté en France, avec méthodologie SWDM v4 enrichie NegaOctet/ARCEP/ADEME.
+Cas typique : crawler automatiquement un site grand public hébergé/consulté en France, avec méthodologie NegaOctet/ARCEP/ADEME.
 
 ```bash
 nr analyse \
@@ -118,32 +118,77 @@ nr analyse \
   --recursive \
   --depth 2 \
   --max_pages 25 \
-  --country FRA \
-  --methodology negaoctet \
-  --language fr \
   --ci
 ```
 
-| Flag                     | Rôle |
-| ------------------------ | ---- |
-| `--url <URL>`            | URL de départ (obligatoire pour `--recursive`) |
-| `--recursive`            | Crawl automatique des liens internes |
-| `--depth 2`              | Profondeur 2 (URL initiale + 2 niveaux) |
-| `--max_pages 25`         | Plafond à 25 pages analysées |
-| `--country FRA`          | Visiteur en France (mix électrique 44 gCO₂/kWh) |
-| `--methodology negaoctet`| Ajoute l'overhead ACV terminal (NegaOctet/ARCEP/ADEME) → empreinte ~1,5–2 g/visite cohérente avec études FR |
-| `--language fr`          | Rapport en français |
-| `--ci`                   | Désactive la barre de progression (sortie texte exploitable) |
+| Flag             | Rôle |
+| ---------------- | ---- |
+| `--url <URL>`    | URL de départ (obligatoire pour `--recursive`) |
+| `--recursive`    | Crawl automatique des liens internes |
+| `--depth 2`      | Profondeur 2 (URL initiale + 2 niveaux) |
+| `--max_pages 25` | Plafond à 25 pages analysées |
+| `--ci`           | Désactive la barre de progression (sortie texte exploitable) |
+
+Les flags `--country FRA`, `--language fr`, `--methodology negaoctet` et `--wait_until domcontentloaded` sont les valeurs par défaut.
 
 Le rapport global sort dans `~/Downloads/<date>_<host>.html` (mode `--url`) ou `resultat/<date>_<host>_index.html` (mode fichier `urls.txt`).
+
+### Mémo — lancer une analyse sur un nouveau site
+
+Remplacer l'URL par le site à auditer. Exemple avec `https://institutnr.org/` :
+
+```bash
+cd ~/nr-analysis-cli
+
+nr analyse \
+  --url https://institutnr.org/ \
+  --recursive \
+  --depth 2 \
+  --max_pages 25 \
+  --ci
+```
+
+Le rapport HTML est généré dans `~/Downloads/<date>_institutnr.org.html`.
+
+Pour un audit plus large (site riche en contenu) :
+
+```bash
+nr analyse \
+  --url https://institutnr.org/ \
+  --recursive \
+  --depth 3 \
+  --max_pages 100 \
+  --ci
+```
+
+**Si timeouts persistants**, forcer `--wait_until networkidle2` (attend que le réseau se calme) ou `--wait_until load` (comportement Puppeteer natif) :
+
+```bash
+nr analyse \
+  --url https://institutnr.org/ \
+  --recursive \
+  --depth 2 \
+  --max_pages 25 \
+  --wait_until networkidle2 \
+  --ci
+```
+
+| `--wait_until`     | Quand l'utiliser |
+| ------------------ | ---------------- |
+| `domcontentloaded` | **défaut** — HTML parsé, contourne les scripts bloquants / anti-bot |
+| `networkidle2`     | attend ≤ 2 connexions actives pendant 500 ms — bon compromis |
+| `load`             | attend que toutes les ressources soient chargées (Puppeteer natif) |
+| `networkidle0`     | attend 0 connexion — strict, peut timeout sur sites avec polling |
+
+---
 
 ### Alias shell (optionnel)
 
 Pour éviter de répéter les flags FR/NegaOctet, ajouter à `~/.zshrc` (ou `~/.bashrc`) :
 
 ```bash
-alias nr-fr='nr analyse --country FRA --methodology negaoctet --language fr --ci'
-alias nr-fr-crawl='nr analyse --country FRA --methodology negaoctet --language fr --ci --recursive --depth 2 --max_pages 25'
+alias nr-fr='nr analyse --ci'
+alias nr-fr-crawl='nr analyse --ci --recursive --depth 2 --max_pages 25'
 ```
 
 Puis :
@@ -484,7 +529,7 @@ nr analyse [url_input_file] [report_output_file] [options]
 | `--grid_device_gco2`  |       | Override intensité carbone terminal en gCO₂/kWh (plug une valeur Electricity Maps à jour). Prioritaire sur `--country`                       |           |
 | `--grid_dc_gco2`      |       | Override intensité carbone datacenter en gCO₂/kWh                         |           |
 | `--grid_network_gco2` |       | Override intensité carbone réseau en gCO₂/kWh                             |           |
-| `--methodology`       |       | Modèle CO₂ : `swdm-v4` (octets transférés seuls) ou `negaoctet` (SWDM v4 + overhead ACV terminal calibré NegaOctet/ARCEP/ADEME pour la France) | `swdm-v4` |
+| `--methodology`       |       | Modèle CO₂ : `negaoctet` (SWDM v4 + overhead ACV terminal calibré NegaOctet/ARCEP/ADEME pour la France) ou `swdm-v4` (octets transférés seuls) | `negaoctet` |
 | `--grafana_link`      |       | URL du dashboard Grafana (format `influxdbhtml`)                          |           |
 | `--influxdb_hostname` |       | URL de la base InfluxDB                                                   |           |
 | `--influxdb_org`      |       | Nom de l'organisation InfluxDB                                            |           |

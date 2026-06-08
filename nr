@@ -103,6 +103,12 @@ yargs(hideBin(process.argv))
                     description: 'Timeout for an analysis of a URL in ms',
                     default: 180000,
                 })
+                .option('wait_until', {
+                    type: 'string',
+                    choices: ['load', 'domcontentloaded', 'networkidle0', 'networkidle2'],
+                    description: "Navigation condition for page.goto: 'domcontentloaded' (default, bypasses blocking scripts), 'load' (waits for all resources), 'networkidle2' (waits until ≤2 connections)",
+                    default: 'domcontentloaded',
+                })
                 .option('worst_pages', {
                     type: 'number',
                     description: 'Number of displayed worst pages',
@@ -152,8 +158,8 @@ yargs(hideBin(process.argv))
                 .option('methodology', {
                     type: 'string',
                     choices: ['swdm-v4', 'negaoctet'],
-                    description: 'Methodology: swdm-v4 (default, bytes-only) or negaoctet (SWDM v4 + NegaOctet/ARCEP/ADEME French LCA overhead for terminal lifecycle)',
-                    default: 'swdm-v4',
+                    description: 'Methodology: negaoctet (default, SWDM v4 + NegaOctet/ARCEP/ADEME French LCA overhead for terminal lifecycle) or swdm-v4 (bytes-only)',
+                    default: 'negaoctet',
                 });
         },
         (argv) => {
