@@ -40,21 +40,23 @@
 
 <style>
   :root {
-    --bg: #fdfdfb;
-    --text: #1a1a1a;
-    --muted: #5a5a56;
-    --accent: #2f5d3a;
-    --border: #e0ded6;
-    --code-bg: #f2f1ea;
+    --bg: #fbfcfe;
+    --text: #101823;
+    --muted: #56626f;
+    --accent: #0d3280;
+    --accent-solid: #0d3280;
+    --border: #dce3ec;
+    --code-bg: #eef2f8;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #16171a;
-      --text: #e8e6df;
-      --muted: #9b9a92;
-      --accent: #7fbf8f;
-      --border: #313234;
-      --code-bg: #1e1f22;
+      --bg: #0e1420;
+      --text: #e6ecf3;
+      --muted: #94a2b3;
+      --accent: #5aa9ea;
+      --accent-solid: #1c4d8f;
+      --border: #23303f;
+      --code-bg: #182233;
     }
   }
   * { box-sizing: border-box; }
@@ -141,9 +143,9 @@
     border: 1px solid var(--border);
   }
   .btn.primary {
-    background: var(--accent);
+    background: var(--accent-solid);
     color: #fff;
-    border-color: var(--accent);
+    border-color: var(--accent-solid);
   }
   footer {
     margin-top: 4rem;
