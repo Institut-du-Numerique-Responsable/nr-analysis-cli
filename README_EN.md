@@ -1,4 +1,4 @@
-[Version française](./README.md)
+[Version française](./README.md) · [Project page](https://institut-du-numerique-responsable.github.io/nr-analysis-cli/)
 
 # nr-analysis-cli
 
