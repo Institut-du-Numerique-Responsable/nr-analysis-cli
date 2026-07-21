@@ -8,9 +8,9 @@ The tool simulates running the extension on specified pages opened in Chromium v
 
 ---
 
-## What's new — 2026 update
+## 2026 update
 
-This version brings a comprehensive refresh of eco-design rules and new CLI features, aligned with the state of the art of the web in 2026.
+This version adds CLI flags for direct-URL analysis and crawling, and extends the eco-design rules.
 
 ### New CLI features
 
@@ -22,37 +22,26 @@ This version brings a comprehensive refresh of eco-design rules and new CLI feat
 | `--max_pages <n>` | Maximum number of pages to crawl and analyze (default: 200) |
 | `--language en` | Reports available in French and English |
 
-### Updated eco-design rules
+### Eco-design rules
 
-**8 new rules** covering modern best practices:
+8 rules were added to cover practices that barely existed when the original rule engine was written:
 
 | Rule | What it checks |
 | ---- | -------------- |
-| **Modern image formats** | Detects JPEG, PNG, GIF, BMP — recommends AVIF, WebP or **JPEG XL** (supported by all major browsers as of 2026) |
-| **Lazy loading for images & iframes** | Checks `loading="lazy"` on both `<img>` **and** `<iframe>` elements (native universal support) |
-| **Tracking scripts** | Detects 30+ tracking domains: Google, Meta, **TikTok Pixel**, **Snapchat Pixel**, **Pinterest Tag**, **Reddit Pixel**, OneTrust, Cookiebot, Klaviyo, Brevo… |
-| **Autoplay video/audio** | Flags any `<video>` or `<audio>` with the `autoplay` attribute |
-| **Font optimization** | Controls font file count (≤ 2) and total weight (≤ 100 KB) |
-| **Render-blocking resources** | Detects `<script>` tags in `<head>` without `async`, `defer`, or `type="module"` |
-| **External iframes** | Counts iframes pointing to third-party domains |
-| **Excessive preload/prefetch** | Flags more than 5 `<link rel="preload/prefetch">` directives |
+| Modern image formats | Detects JPEG, PNG, GIF, BMP — recommends AVIF, WebP or JPEG XL |
+| Lazy loading for images & iframes | Checks `loading="lazy"` on both `<img>` and `<iframe>` elements |
+| Tracking scripts | Detects 30+ tracking domains: Google, Meta, TikTok Pixel, Snapchat Pixel, Pinterest Tag, Reddit Pixel, OneTrust, Cookiebot, Klaviyo, Brevo… |
+| Autoplay video/audio | Flags any `<video>` or `<audio>` with the `autoplay` attribute |
+| Font optimization | Controls font file count (≤ 2) and total weight (≤ 100 KB) |
+| Render-blocking resources | Detects `<script>` tags in `<head>` without `async`, `defer`, or `type="module"` |
+| External iframes | Counts iframes pointing to third-party domains |
+| Excessive preload/prefetch | Flags more than 5 `<link rel="preload/prefetch">` directives |
 
-**6 existing rules improved:**
-
-| Rule | Improvement |
-| ---- | ----------- |
-| **Social network widgets** | X (Twitter) URLs updated, extended detection to X.com and LinkedIn badges |
-| **HTTP compression** | Documentation updated (Brotli recommended over gzip) |
-| **Browser plugins** | Extended to `<object>` and `<embed>` (Flash, Java, Silverlight all obsolete) |
-| **Modern formats** | FR/EN locales updated to mention 2026 support for all 3 formats |
-| **Lazy loading** | FR/EN locales reflect the extension to iframes |
-| **Tracking** | FR/EN locales include TikTok Pixel in examples |
+6 existing rules were updated too: social network widgets now cover X.com and LinkedIn badges, HTTP compression documentation recommends Brotli over gzip, browser plugin detection extends to `<object>` and `<embed>`, and the FR/EN locale strings were refreshed to match.
 
 ### Technical stack
 
-- **Puppeteer 23.9+** — modern headless Chromium, SSL error ignore, non-headless mode
-- **Node.js ES2020+** — CommonJS modules, native async/await
-- **Bilingual reports** — Mustache templates, full FR/EN i18n
+Puppeteer 23.9+ (headless Chromium, SSL error ignore, non-headless mode), Node.js ES2020+ (CommonJS, native async/await), Mustache-based reports with full FR/EN i18n.
 
 ---
 
@@ -399,7 +388,6 @@ The HTML report contains:
 
 ![Global page](./docs/rapport-html-global.jpeg)
 ![Scenario page](./docs/rapport-html-detail-page.jpeg)
-![Scenario page with page change](./docs/rapport-html-detail-page-avec-changement-page.jpeg)
 
 #### InfluxDB/Grafana
 
@@ -458,12 +446,11 @@ It embeds components derived from the [GreenIT-Analysis](https://github.com/cnum
 
 ## AGPL implications for users
 
-- ✅ **Commercial use is allowed** (internal or external). AGPL does not forbid sale or for-profit use.
-- ⚠ **Network service deployment** : you must make the source code (including your modifications) available under AGPL-3.0 to anyone interacting with the service (clause §13).
-- ⚠ **Derivative works** : any modification redistributed must remain under AGPL-3.0.
-- ✅ **Internal use without redistribution** : no obligation beyond preserving the copyright headers.
+Commercial use, internal or external, is allowed: AGPL doesn't forbid sale or for-profit use. Internal use without redistribution carries no obligation beyond preserving the copyright headers.
 
-When in doubt, refer to the [official AGPL-3.0 text](https://www.gnu.org/licenses/agpl-3.0.html).
+Two cases need more care. If you deploy the tool (modified or not) as a network-accessible service, you must make the source code, including your modifications, available to anyone interacting with that service (AGPL clause §13). And any derivative work you redistribute must stay under AGPL-3.0.
+
+When in doubt, the [official AGPL-3.0 text](https://www.gnu.org/licenses/agpl-3.0.html) is the reference.
 
 ## Credits
 

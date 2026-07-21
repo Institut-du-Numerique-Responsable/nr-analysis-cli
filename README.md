@@ -8,11 +8,11 @@ L'outil simule l'exécution de l'extension sur les pages spécifiées, ouvertes 
 
 ---
 
-## Nouveautés — mise à jour 2026
+## Mise à jour 2026
 
-Cette version apporte une refonte complète des règles d'éco-conception et de nouvelles fonctionnalités CLI, alignées sur l'état de l'art du web en 2026.
+Cette version ajoute des flags CLI pour l'analyse directe et le crawl, et enrichit les règles d'éco-conception.
 
-### Nouvelles fonctionnalités CLI
+### Nouveautés côté CLI
 
 | Fonctionnalité | Description |
 | -------------- | ----------- |
@@ -22,37 +22,26 @@ Cette version apporte une refonte complète des règles d'éco-conception et de 
 | `--max_pages <n>` | Nombre maximum de pages à crawler et analyser (défaut : 200) |
 | `--language en` | Rapports disponibles en français et en anglais |
 
-### Règles d'éco-conception mises à jour
+### Règles d'éco-conception
 
-**8 nouvelles règles** couvrant les pratiques modernes :
+8 règles ajoutées pour couvrir des pratiques qui n'existaient pas ou peu quand le moteur de règles d'origine a été écrit :
 
 | Règle | Quoi ? |
 | ----- | ------- |
-| **Formats d'image modernes** | Détecte JPEG, PNG, GIF, BMP — recommande AVIF, WebP ou **JPEG XL** (supporté par tous les navigateurs majeurs en 2026) |
-| **Lazy loading images & iframes** | Vérifie `loading="lazy"` sur les `<img>` **et** les `<iframe>` (support natif universel) |
-| **Scripts de tracking** | Détecte 30+ domaines de tracking : Google, Meta, **TikTok Pixel**, **Snapchat Pixel**, **Pinterest Tag**, **Reddit Pixel**, OneTrust, Cookiebot, Klaviyo, Brevo… |
-| **Autoplay vidéo/audio** | Signale tout `<video>` ou `<audio>` avec l'attribut `autoplay` |
-| **Optimisation des polices** | Contrôle nombre (≤ 2) et poids total (≤ 100 Ko) des fichiers de polices chargés |
-| **Ressources bloquant le rendu** | Détecte les `<script>` dans `<head>` sans `async`, `defer` ou `type="module"` |
-| **Iframes externes** | Compte les iframes pointant vers des domaines tiers |
-| **Preload/Prefetch excessifs** | Signale plus de 5 directives `<link rel="preload/prefetch">` |
+| Formats d'image modernes | Détecte JPEG, PNG, GIF, BMP, recommande AVIF, WebP ou JPEG XL |
+| Lazy loading images & iframes | Vérifie `loading="lazy"` sur les `<img>` et les `<iframe>` |
+| Scripts de tracking | Détecte 30+ domaines : Google, Meta, TikTok Pixel, Snapchat Pixel, Pinterest Tag, Reddit Pixel, OneTrust, Cookiebot, Klaviyo, Brevo… |
+| Autoplay vidéo/audio | Signale tout `<video>` ou `<audio>` avec l'attribut `autoplay` |
+| Optimisation des polices | Contrôle nombre (≤ 2) et poids total (≤ 100 Ko) des fichiers de polices chargés |
+| Ressources bloquant le rendu | Détecte les `<script>` dans `<head>` sans `async`, `defer` ou `type="module"` |
+| Iframes externes | Compte les iframes pointant vers des domaines tiers |
+| Preload/Prefetch excessifs | Signale plus de 5 directives `<link rel="preload/prefetch">` |
 
-**6 règles existantes améliorées :**
-
-| Règle | Amélioration |
-| ----- | ------------ |
-| **Widgets réseaux sociaux** | URLs X (Twitter) mises à jour, détection étendue à X.com, LinkedIn badges |
-| **Compression HTTP** | Documentation actualisée (Brotli recommandé en priorité sur gzip) |
-| **Plugins navigateur** | Portée étendue : `<object>` et `<embed>` (Flash, Java, Silverlight tous obsolètes) |
-| **Formats modernes** | Locales FR/EN mises à jour pour mentionner le support 2026 des 3 formats |
-| **Lazy loading** | Locales FR/EN reflètent l'extension aux iframes |
-| **Tracking** | Locales FR/EN incluent TikTok Pixel dans les exemples |
+Et 6 règles existantes ont été mises à jour : les widgets réseaux sociaux couvrent désormais X.com et les badges LinkedIn, la compression HTTP recommande Brotli avant gzip, les plugins navigateur incluent `<object>` et `<embed>`, et les locales FR/EN ont été actualisées en conséquence (formats modernes, lazy loading, tracking).
 
 ### Stack technique
 
-- **Puppeteer 23.9+** — Chromium headless moderne, support SSL ignore, mode non-headless
-- **Node.js ES2020+** — modules CommonJS, async/await natif
-- **Rapports bilingues** — Mustache templates, i18n FR/EN complet
+Puppeteer 23.9+ (Chromium headless, ignore SSL, mode non-headless), Node.js ES2020+ (CommonJS, async/await natif), rapports Mustache avec i18n FR/EN complet.
 
 ---
 
@@ -852,12 +841,11 @@ Il intègre des composants dérivés de l'extension Chrome [GreenIT-Analysis](ht
 
 ## Implications AGPL pour les utilisateurs
 
-- ✅ **Usage commercial autorisé** (interne ou externe). L'AGPL n'interdit pas la vente ni l'usage à but lucratif.
-- ⚠ **Distribution / déploiement comme service réseau** : vous devez rendre disponible le code source (y compris vos modifications) à toute personne interagissant avec le service, sous AGPL-3.0 (clause §13).
-- ⚠ **Œuvres dérivées** : toute modification redistribuée doit rester sous AGPL-3.0.
-- ✅ **Usage interne sans redistribution** : aucune obligation supplémentaire au-delà du respect des en-têtes de copyright.
+L'usage commercial, interne ou externe, est autorisé : l'AGPL n'interdit ni la vente ni l'usage à but lucratif. Un usage interne sans redistribution ne crée aucune obligation au-delà du respect des en-têtes de copyright.
 
-En cas de doute, consulter le [texte officiel AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.html).
+Deux cas demandent plus d'attention. Si vous déployez l'outil (modifié ou non) comme service accessible en réseau, vous devez rendre le code source disponible, avec vos modifications, à toute personne qui interagit avec ce service (clause §13 de l'AGPL). Et toute œuvre dérivée que vous redistribuez doit rester sous AGPL-3.0.
+
+En cas de doute, le [texte officiel de l'AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.html) fait foi.
 
 ## Crédits
 

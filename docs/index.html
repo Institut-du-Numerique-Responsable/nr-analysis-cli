@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>nr-analysis-cli — audit d'écoconception web en ligne de commande</title>
+<meta name="description" content="Un CLI Node.js qui audite l'empreinte environnementale, l'accessibilité et la sécurité d'un site web, page par page.">
+<style>
+  :root {
+    --bg: #fdfdfb;
+    --text: #1a1a1a;
+    --muted: #5a5a56;
+    --accent: #2f5d3a;
+    --border: #e0ded6;
+    --code-bg: #f2f1ea;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16171a;
+      --text: #e8e6df;
+      --muted: #9b9a92;
+      --accent: #7fbf8f;
+      --border: #313234;
+      --code-bg: #1e1f22;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+  }
+  main {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 4rem 1.5rem 6rem;
+  }
+  header.hero {
+    margin-bottom: 3rem;
+  }
+  .kicker {
+    color: var(--muted);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.6rem;
+  }
+  h1 {
+    font-size: 2rem;
+    line-height: 1.25;
+    margin: 0 0 1rem;
+  }
+  h2 {
+    font-size: 1.3rem;
+    margin: 3rem 0 1rem;
+    border-top: 1px solid var(--border);
+    padding-top: 2rem;
+  }
+  p { margin: 0 0 1rem; }
+  .lede {
+    font-size: 1.1rem;
+    color: var(--muted);
+  }
+  a { color: var(--accent); }
+  code {
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+  pre {
+    background: var(--code-bg);
+    padding: 1rem 1.2rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 0.9rem;
+  }
+  pre code { background: none; padding: 0; }
+  ul { padding-left: 1.3rem; }
+  li { margin-bottom: 0.4rem; }
+  img {
+    max-width: 100%;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    display: block;
+    margin: 1rem 0;
+  }
+  figcaption {
+    color: var(--muted);
+    font-size: 0.85rem;
+    margin-top: -0.6rem;
+    margin-bottom: 1.5rem;
+  }
+  .cta {
+    display: flex;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+    margin-top: 1.5rem;
+  }
+  .btn {
+    display: inline-block;
+    padding: 0.6rem 1.1rem;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 0.95rem;
+    border: 1px solid var(--border);
+  }
+  .btn.primary {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  footer {
+    margin-top: 4rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
+  th, td { text-align: left; padding: 0.4rem 0.6rem 0.4rem 0; border-bottom: 1px solid var(--border); font-size: 0.92rem; }
+</style>
+</head>
+<body>
+<main>
+
+<header class="hero">
+  <div class="kicker">Institut du Numérique Responsable</div>
+  <h1>nr-analysis-cli</h1>
+  <p class="lede">Un CLI Node.js qui audite l'empreinte environnementale, l'accessibilité et la sécurité d'un site web, page par page, sans ouvrir un navigateur à la main.</p>
+  <div class="cta">
+    <a class="btn primary" href="https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli">Voir le dépôt</a>
+    <a class="btn" href="https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli#readme">Lire la documentation</a>
+  </div>
+</header>
+
+<section>
+<p>Auditer l'écoconception d'un site à la main, extension par extension, page par page, ne tient pas la route au-delà de trois URL. Ce CLI reprend le moteur de règles de l'extension Chrome <a href="https://github.com/cnumr/GreenIT-Analysis">GreenIT-Analysis</a> et l'exécute en tâche de fond, sur autant de pages qu'on veut, dans un vrai Chromium piloté par Puppeteer plutôt que dans une simulation.</p>
+
+<p>On lui donne une URL ou une liste d'URL. Il ouvre chaque page avec le cache désactivé pour ne pas fausser les mesures, applique 38 règles d'écoconception (RGESN, GR491), 17 contrôles d'accessibilité, 13 contrôles de sécurité serveur et 9 contrôles de performance. Il calcule aussi une estimation du CO₂, de l'eau et de l'énergie consommés par visite, avec le modèle Sustainable Web Design v4 et un calibrage NegaOctet/ARCEP/ADEME pour les sites hébergés ou visités en France. Le résultat sort en rapport HTML ou Excel.</p>
+
+<p>C'est pour les équipes qui doivent documenter un plan d'écoconception, les agences qui auditent des sites clients, ou pour qui veut simplement comparer un site avant et après une refonte.</p>
+</section>
+
+<h2>Essayer en cinq minutes</h2>
+<pre><code>git clone https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli.git
+cd nr-analysis-cli
+npm install
+npm link
+
+nr analyse --url https://institutnr.org/</code></pre>
+<p>Le rapport HTML s'ouvre directement dans le navigateur. Pour une liste de pages, un fichier texte avec une URL par ligne suffit : <code>nr analyse urls.txt</code>.</p>
+
+<h2>Ce que ça sort</h2>
+<figure>
+  <img src="rapport-html-global.jpeg" alt="Rapport HTML global : moyennes environnement, accessibilité, sécurité et classement des pages">
+  <figcaption>Rapport HTML — vue d'ensemble d'un audit multi-pages</figcaption>
+</figure>
+<figure>
+  <img src="rapport-html-detail-page.jpeg" alt="Rapport HTML détaillé d'une page : requêtes, poids, EcoIndex, eau, GES">
+  <figcaption>Détail par page — requêtes, poids, EcoIndex, eau, GES, bonnes pratiques</figcaption>
+</figure>
+<figure>
+  <img src="grafana-dashboard.png" alt="Dashboard Grafana alimenté par InfluxDB">
+  <figcaption>Suivi dans le temps via InfluxDB/Grafana, pour du monitoring continu</figcaption>
+</figure>
+
+<h2>Quatre axes, un score chacun</h2>
+<table>
+<tr><th>Axe</th><th>Ce qui est vérifié</th></tr>
+<tr><td>Environnement</td><td>38 règles d'écoconception : poids, requêtes, images, polices, tracking…</td></tr>
+<tr><td>Accessibilité</td><td>12 contrôles Tanaguru/RGAA + 5 contrôles complémentaires</td></tr>
+<tr><td>Sécurité</td><td>13 contrôles serveur : TLS, en-têtes HTTP, cookies, DNSSEC</td></tr>
+<tr><td>Performance serveur</td><td>9 contrôles d'infrastructure : HTTP/2, compression, cache, CDN</td></tr>
+</table>
+<p>Le détail complet des 77 règles est dans le <a href="https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli#référentiel-des-règles-évaluées">référentiel du README</a>.</p>
+
+<h2>Licence</h2>
+<p>AGPL-3.0-or-later. L'outil hérite de composants dérivés de GreenIT-Analysis et d'EcoMeter, sous la même licence. En clair : l'usage commercial est permis, mais si vous déployez une version modifiée comme service accessible à des tiers, vous devez en publier le code source. Les détails sont dans le README.</p>
+
+<footer>
+  <p><a href="https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli">Institut-du-Numerique-Responsable/nr-analysis-cli</a> — maintenu par l'<a href="https://institutnr.org/">Institut du Numérique Responsable</a>.</p>
+</footer>
+
+</main>
+</body>
+</html>
