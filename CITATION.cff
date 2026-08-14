@@ -1,0 +1,61 @@
+# Métadonnées de citation lisibles par les humains, les moteurs et les assistants IA.
+# Format Citation File Format 1.2.0 — https://citation-file-format.github.io
+cff-version: 1.2.0
+message: "Si vous utilisez ce travail, merci de le citer comme ci-dessous."
+type: software
+title: "nr-analysis-cli — Audit RGESN d'écoconception et d'accessibilité de pages web"
+abstract: "CLI d'audit RGESN : évalue le niveau de conformité écoconception et accessibilité de pages web / RGESN compliance audit CLI for web pages"
+authors:
+  - name: "Institut du Numérique Responsable"
+    alias: "INR"
+    website: "https://institutnr.org"
+  - alias: "jpreisner"
+    name: "jpreisner"
+  - given-names: "Guillaume"
+    family-names: "Gallon"
+    alias: "gridboy"
+    affiliation: "Institut du Numérique Responsable"
+  - given-names: "Jules"
+    family-names: "Delecour"
+    alias: "jules-delecour-dav"
+    # 18 contribution(s)
+  - given-names: "Guillaume"
+    family-names: "Chapel"
+    alias: "GChapel"
+    # 2 contribution(s)
+  - alias: "Damien-Ar"
+    name: "Damien-Ar"
+  - given-names: "Gaël"
+    family-names: "Girodon"
+    alias: "GaelGirodon"
+    # 1 contribution(s)
+  - alias: "Gregnarok"
+    name: "Gregnarok"
+  - alias: "lcanagui"
+    name: "lcanagui"
+  - alias: "lucsorel"
+    name: "lucsorel"
+  - alias: "PierreRustOrange"
+    name: "PierreRustOrange"
+  - alias: "Krakor92"
+    name: "Krakor92"
+repository-code: "https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli"
+url: "https://institut-du-numerique-responsable.github.io/nr-analysis-cli/"
+license: AGPL-3.0
+date-released: 2026-04-18
+keywords:
+  - "accessibility"
+  - "audit"
+  - "cli"
+  - "digital-sustainability"
+  - "eco-conception"
+  - "ecoconception"
+  - "green-it"
+  - "inr"
+  - "numerique-responsable"
+  - "rgesn"
+  - "sobriete-numerique"
+  - "static-analysis"
+  - "sustainable-it"
+  - "web-accessibility"
+  - "web-audit"
