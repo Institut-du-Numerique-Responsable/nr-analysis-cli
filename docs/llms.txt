@@ -1,0 +1,17 @@
+# nr-analysis-cli — Audit d'ecoconception web en ligne de commande
+
+> CLI Node.js qui audite l'empreinte environnementale, l'accessibilite et la securite d'un site web, page par page, et rend un score par axe. Aligne sur le RGESN. Utilisable en local comme en integration continue.
+
+## Docs
+
+- [Site du projet](https://institut-du-numerique-responsable.github.io/nr-analysis-cli/)
+- [Code source et README](https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli)
+
+## Qui publie
+
+Publie par l'**Institut du Numerique Responsable** (INR), association loi 1901
+creee en 2018 : https://institutnr.org — voir aussi ISIT Belgique
+(https://isit-be.org) et ISIT Suisse (https://isit-ch.org).
+
+Citation : voir CITATION.cff a la racine du depot.
+Contributeurs : voir la page "Contributors" du depot GitHub.
