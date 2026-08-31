@@ -60,7 +60,7 @@ reprend le moteur de règles exécuté dans la page.
 ### Modifié
 
 - La méthodologie carbone par défaut passe à `negaoctet` : SWDM v4 complété par
-  la surcouche NegaOctet, ARCEP et ADEME pour le cycle de vie des terminaux.
+  une surcouche ACV terminal calibrée sur les études ARCEP et ADEME.
 - Le score de durabilité remplace l'EcoIndex comme note principale de l'axe
   environnement, l'EcoIndex restant calculé et affiché.
 - Détection élargie des bonnes pratiques modernes : widgets X.com et LinkedIn,

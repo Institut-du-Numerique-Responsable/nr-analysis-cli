@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>nr-analysis-cli — audit d'écoconception web en ligne de commande</title>
+<title>nr-analysis-cli : audit d'écoconception web en ligne de commande</title>
 <meta name="description" content="Un CLI Node.js qui audite l'empreinte environnementale, l'accessibilité et la sécurité d'un site web, page par page.">
 <link rel="canonical" href="https://institut-du-numerique-responsable.github.io/nr-analysis-cli/">
 
 <meta property="og:type" content="website">
-<meta property="og:title" content="nr-analysis-cli — audit d'écoconception web en ligne de commande">
+<meta property="og:title" content="nr-analysis-cli : audit d'écoconception web en ligne de commande">
 <meta property="og:description" content="Un CLI Node.js qui audite l'empreinte environnementale, l'accessibilité et la sécurité d'un site web, page par page.">
 <meta property="og:url" content="https://institut-du-numerique-responsable.github.io/nr-analysis-cli/">
 <meta property="og:image" content="https://institut-du-numerique-responsable.github.io/nr-analysis-cli/rapport-html-global.jpeg">
@@ -16,7 +16,7 @@
 <meta property="og:site_name" content="nr-analysis-cli">
 
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="nr-analysis-cli — audit d'écoconception web en ligne de commande">
+<meta name="twitter:title" content="nr-analysis-cli : audit d'écoconception web en ligne de commande">
 <meta name="twitter:description" content="Un CLI Node.js qui audite l'empreinte environnementale, l'accessibilité et la sécurité d'un site web, page par page.">
 <meta name="twitter:image" content="https://institut-du-numerique-responsable.github.io/nr-analysis-cli/rapport-html-global.jpeg">
 
@@ -174,9 +174,9 @@
 <section>
 <p>Auditer l'écoconception d'un site à la main, extension par extension, page par page, ne tient pas la route au-delà de trois URL. Ce CLI reprend le moteur de règles de l'extension Chrome <a href="https://github.com/cnumr/GreenIT-Analysis">GreenIT-Analysis</a> et l'exécute en tâche de fond, sur autant de pages qu'on veut, dans un vrai Chromium piloté par Puppeteer plutôt que dans une simulation.</p>
 
-<p>On lui donne une URL ou une liste d'URL. Il ouvre chaque page avec le cache désactivé pour ne pas fausser les mesures, applique 37 règles d'écoconception (RGESN, GR491), 17 contrôles d'accessibilité, 14 contrôles de sécurité serveur et 7 contrôles de performance. Il calcule aussi une estimation du CO₂, de l'eau et de l'énergie consommés par visite, avec le modèle Sustainable Web Design v4 et un calibrage NegaOctet/ARCEP/ADEME pour les sites hébergés ou visités en France. Le résultat sort en rapport HTML ou Excel.</p>
+<p>On lui donne une URL, une liste d'URL, un sitemap ou un parcours utilisateur décrit en YAML. Il ouvre chaque page avec le cache et les service workers désactivés pour ne pas fausser les mesures, applique 37 règles d'écoconception (RGESN, GR491, WSG), 17 contrôles d'accessibilité, 14 contrôles de sécurité serveur et 7 contrôles de performance. Il estime aussi le CO₂, l'eau et l'énergie consommés par visite, avec le modèle Sustainable Web Design v4 et un calibrage ARCEP/ADEME pour les sites hébergés ou visités en France. Le résultat sort en HTML, en Excel, ou part dans InfluxDB pour du suivi continu.</p>
 
-<p>C'est pour les équipes qui doivent documenter un plan d'écoconception, les agences qui auditent des sites clients, ou pour qui veut simplement comparer un site avant et après une refonte.</p>
+<p>C'est pour les équipes qui doivent documenter un plan d'écoconception, les agences qui auditent des sites clients, ou pour qui veut comparer un site avant et après une refonte.</p>
 </section>
 
 <h2>Essayer en cinq minutes</h2>
@@ -188,18 +188,29 @@ npm link
 nr analyse --url https://institutnr.org/</code></pre>
 <p>Le rapport HTML s'ouvre directement dans le navigateur. Pour une liste de pages, un fichier texte avec une URL par ligne suffit : <code>nr analyse urls.txt</code>.</p>
 
+<h2>Cinq façons de lui donner des pages</h2>
+<table>
+<tr><th>Mode</th><th>Commande</th></tr>
+<tr><td>Une URL</td><td><code>nr analyse --url https://exemple.fr</code></td></tr>
+<tr><td>Une liste plate</td><td><code>nr analyse urls.txt</code></td></tr>
+<tr><td>Crawl des liens internes</td><td><code>nr analyse --url https://exemple.fr --recursive --depth 3 --max_pages 100</code></td></tr>
+<tr><td>Depuis un sitemap</td><td><code>nr parseSitemap https://exemple.fr/sitemap.xml url.yaml</code></td></tr>
+<tr><td>Parcours utilisateur</td><td>fichier YAML décrivant les actions <code>click</code>, <code>text</code>, <code>scroll</code>, <code>select</code>, <code>press</code></td></tr>
+</table>
+<p>Les pages derrière authentification s'auditent avec <code>--login</code>, qui rejoue une séquence de connexion avant l'analyse. On peut simuler sept appareils, du poste de bureau à l'iPhone, passer par un proxy, injecter des en-têtes HTTP, et sortir les rapports en français ou en anglais. Le flag <code>--ci</code> coupe la barre de progression pour l'intégration continue.</p>
+
 <h2>Ce que ça sort</h2>
 <figure>
   <img src="rapport-html-global.jpeg" alt="Rapport HTML global : moyennes environnement, accessibilité, sécurité et classement des pages">
-  <figcaption>Rapport HTML — vue d'ensemble d'un audit multi-pages</figcaption>
+  <figcaption>Rapport HTML : vue d'ensemble d'un audit multi-pages</figcaption>
 </figure>
 <figure>
   <img src="rapport-html-detail-page.jpeg" alt="Rapport HTML détaillé d'une page : requêtes, poids, EcoIndex, eau, GES">
-  <figcaption>Détail par page — requêtes, poids, EcoIndex, eau, GES, bonnes pratiques</figcaption>
+  <figcaption>Détail par page : requêtes, poids, EcoIndex, eau, GES, bonnes pratiques</figcaption>
 </figure>
 <figure>
   <img src="grafana-dashboard.png" alt="Dashboard Grafana alimenté par InfluxDB">
-  <figcaption>Suivi dans le temps via InfluxDB/Grafana, pour du monitoring continu</figcaption>
+  <figcaption>Suivi dans le temps via InfluxDB et Grafana, pour du monitoring continu</figcaption>
 </figure>
 
 <h2>Quatre axes, un score chacun</h2>
@@ -210,13 +221,38 @@ nr analyse --url https://institutnr.org/</code></pre>
 <tr><td>Sécurité</td><td>14 contrôles serveur : TLS, en-têtes HTTP, cookies, DNSSEC</td></tr>
 <tr><td>Performance serveur</td><td>7 contrôles d'infrastructure : HTTP/2, compression, cache, CDN</td></tr>
 </table>
-<p>Le détail complet des 77 règles est dans le <a href="https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli#référentiel-des-règles-évaluées">référentiel du README</a>.</p>
+<p>Chaque règle rend un niveau A, B ou C. Le score d'un axe est la moyenne de ces niveaux pondérée par la criticité de la règle, et se traduit en grade de A à G. Le détail complet des 75 règles et contrôles est dans le <a href="https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli#référentiel-des-règles-évaluées">référentiel du README</a>.</p>
+
+<h2>Les chiffres produits</h2>
+<p>À côté des quatre scores d'axe, chaque page reçoit un EcoIndex, qui mesure la complexité structurelle (nœuds DOM, requêtes, poids), et un score de synthèse qui croise cet EcoIndex avec l'empreinte carbone SWDM v4. Les deux modèles sont complémentaires : le premier ignore le mix électrique, le second en dépend. Quand ils divergent, l'outil le signale par un indice de confiance et explique lequel tire le score vers le bas.</p>
+<table>
+<tr><th>Métrique</th><th>Unité</th></tr>
+<tr><td>CO₂ par visite, et pondéré par le cache</td><td>g CO₂eq</td></tr>
+<tr><td>Eau par visite</td><td>cL</td></tr>
+<tr><td>Énergie par visite</td><td>Wh</td></tr>
+<tr><td>CO₂, eau et énergie pour 1 million de visites</td><td>kg CO₂eq, L, kWh</td></tr>
+<tr><td>Hébergement vert, vérifié auprès de la Green Web Foundation</td><td>oui / non</td></tr>
+<tr><td>Intensité carbone du terminal, du réseau et du datacenter</td><td>gCO₂/kWh</td></tr>
+</table>
+<p>Le pays du datacenter est détecté automatiquement, par en-têtes CDN puis géolocalisation IP. On peut le forcer, comme on peut forcer chaque intensité carbone pour brancher ses propres données.</p>
+
+<h2>Ce qu'on en fait</h2>
+<p>Sur un audit multi-pages, le rapport classe les pires pages en environnement et en accessibilité, les meilleures, et les règles qui échouent le plus souvent sur l'ensemble du site. Il produit des recommandations tirées des mesures : DOM à simplifier, requêtes à consolider, images à convertir, hébergement à migrer. Les contrôles d'accessibilité remontent les éléments fautifs, extraits du DOM, pour aller les corriger directement.</p>
+
+<h2>Documentation</h2>
+<ul>
+  <li><a href="https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli#readme">README</a> : installation, usage, référentiel complet des règles</li>
+  <li><a href="https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli/blob/main/docs/architecture.md">Architecture et guide du contributeur</a> : comment le code est organisé, comment ajouter une règle</li>
+  <li><a href="https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli/blob/main/CHANGELOG.md">Journal des modifications</a></li>
+  <li><a href="https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli/blob/main/SECURITY.md">Politique de sécurité</a></li>
+  <li><a href="https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli/blob/main/README_EN.md">English documentation</a></li>
+</ul>
 
 <h2>Licence</h2>
 <p>AGPL-3.0-or-later. L'outil hérite de composants dérivés de GreenIT-Analysis et d'EcoMeter, sous la même licence. En clair : l'usage commercial est permis, mais si vous déployez une version modifiée comme service accessible à des tiers, vous devez en publier le code source. Les détails sont dans le README.</p>
 
 <footer>
-  <p><a href="https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli">Institut-du-Numerique-Responsable/nr-analysis-cli</a> — maintenu par l'<a href="https://institutnr.org/">Institut du Numérique Responsable</a>.</p>
+  <p><a href="https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli">Institut-du-Numerique-Responsable/nr-analysis-cli</a>, maintenu par l'<a href="https://institutnr.org/">Institut du Numérique Responsable</a>.</p>
 </footer>
 
 </main>

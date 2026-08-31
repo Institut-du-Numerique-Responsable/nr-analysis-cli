@@ -104,7 +104,7 @@ Le rapport HTML s'ouvre dans n'importe quel navigateur (`open` sur macOS, `xdg-o
 
 ### Commande type — audit crawl complet d'un site français
 
-Cas typique : crawler automatiquement un site grand public hébergé/consulté en France, avec méthodologie NegaOctet/ARCEP/ADEME.
+Cas typique : crawler automatiquement un site grand public hébergé/consulté en France, avec la méthodologie calibrée ARCEP/ADEME.
 
 ```bash
 nr analyse \
@@ -178,7 +178,7 @@ nr analyse \
 
 ### Alias shell (optionnel)
 
-Pour éviter de répéter les flags FR/NegaOctet, ajouter à `~/.zshrc` (ou `~/.bashrc`) :
+Pour éviter de répéter les flags français, ajouter à `~/.zshrc` (ou `~/.bashrc`) :
 
 ```bash
 alias nr-fr='nr analyse --ci'
@@ -523,7 +523,7 @@ nr analyse [url_input_file] [report_output_file] [options]
 | `--grid_device_gco2`  |       | Override intensité carbone terminal en gCO₂/kWh (plug une valeur Electricity Maps à jour). Prioritaire sur `--country`                       |           |
 | `--grid_dc_gco2`      |       | Override intensité carbone datacenter en gCO₂/kWh                         |           |
 | `--grid_network_gco2` |       | Override intensité carbone réseau en gCO₂/kWh                             |           |
-| `--methodology`       |       | Modèle CO₂ : `negaoctet` (SWDM v4 + overhead ACV terminal calibré NegaOctet/ARCEP/ADEME pour la France) ou `swdm-v4` (octets transférés seuls) | `negaoctet` |
+| `--methodology`       |       | Modèle CO₂ : `negaoctet` (SWDM v4 + overhead ACV terminal calibré sur les études françaises) ou `swdm-v4` (octets transférés seuls) | `negaoctet` |
 | `--grafana_link`      |       | URL du dashboard Grafana (format `influxdbhtml`)                          |           |
 | `--influxdb_hostname` |       | URL de la base InfluxDB                                                   |           |
 | `--influxdb_org`      |       | Nom de l'organisation InfluxDB                                            |           |
@@ -540,7 +540,7 @@ L'outil expose **trois indicateurs complémentaires** dans le rapport :
 | **EcoIndex** | formule officielle ecoindex.fr (DOM × 3, requêtes × 2, poids × 1) | Pilotage écoconception structurelle |
 | **Score synthétique** | EcoIndex et SWD normalisés puis pondérés 50/50 + confidence | Score global d'une page |
 
-Le flag `--methodology negaoctet` enrichit SWDM v4 avec un **overhead per-visit** calibré sur les études françaises (NegaOctet 2022, ARCEP/ADEME 2022, ADEME Base Empreinte 2024) pour capturer la part ACV terminal/lifecycle absente du modèle bytes-only. Recommandé pour un site grand public hébergé/consulté en France.
+Le flag `--methodology negaoctet` enrichit SWDM v4 avec un **overhead per-visit** calibré sur les études françaises (ARCEP/ADEME 2022, ADEME Base Empreinte 2024) pour capturer la part ACV terminal/lifecycle absente du modèle bytes-only. Recommandé pour un site grand public hébergé/consulté en France.
 
 Le flag `--dc_country` (ou auto-détection via CDN/IP) dissocie l'intensité carbone du datacenter de celle du visiteur. Critique quand DC ≠ pays visiteur (ex. visiteur France + hébergement AWS Ireland).
 
@@ -669,13 +669,28 @@ Chaque page auditée est notée sur 4 axes indépendants. Le grade global va de 
 | **Sécurité (cyber)** | 0–100 | 14 contrôles serveur (TLS, en-têtes HTTP, cookies, DNSSEC…) |
 | **Performance serveur** | 0–100 | 7 contrôles d'infrastructure (HTTP/2, compression, cache, CDN…) |
 
-Chaque règle renvoie un **niveau de conformité** :
+Chaque règle renvoie un **niveau de conformité** : `A` (règle respectée),
+`B` (amélioration mineure) ou `C` (règle non respectée).
 
-- `A` : règle respectée
-- `B` : amélioration mineure
-- `C` : règle non respectée
+Le score d'un axe est la moyenne de ces niveaux, pondérée par la criticité de
+chaque règle. La conversion en points diffère selon l'axe :
 
-Le score global d'un axe est la moyenne pondérée des niveaux selon la criticité.
+| Axe | A | B | C | Pondération | Fichier |
+| --- | - | - | - | ----------- | ------- |
+| Environnement | 1,0 | 0,6 | 0 | champ `impact` de `conf/rules.js`, de 1 à 9 | `cli-core/scoring.js` |
+| Social | 1,0 | 0,5 | 0 | `CHECK_WEIGHTS`, de 2 à 5 selon la criticité WCAG | `cli-core/socialScoring.js` |
+| Sécurité et performance | 1,0 | 0,5 | 0 | `SECURITY_WEIGHTS` et `SERVER_WEIGHTS`, de 1 à 5 | `cli-core/auditScoring.js` |
+
+Les quatre axes partagent le même barème de grade :
+
+| Score | 90+ | 75+ | 60+ | 45+ | 30+ | 15+ | < 15 |
+| ----- | --- | --- | --- | --- | --- | --- | ---- |
+| Grade | A | B | C | D | E | F | G |
+
+Le score de synthèse suit un barème plus sévère, décrit à la section 5.
+
+L'axe environnement produit aussi un score par catégorie WSG (`Web Development`,
+`UX Design`, `Hosting & Infrastructure`, `NR`), visible dans le rapport HTML.
 
 ---
 
@@ -821,20 +836,64 @@ Le score global d'un axe est la moyenne pondérée des niveaux selon la criticit
 
 ---
 
-## 5. Métriques environnementales calculées
+## 5. Scores et métriques calculés
 
-En plus des règles, l'outil estime pour chaque page :
+### 5.1 Les six scores
+
+| Score | Ce qu'il mesure | Échelle |
+| ----- | --------------- | ------- |
+| **Score de durabilité** | règles d'éco-conception pondérées par leur impact | 0–100 (A–G) |
+| **Score social** | 17 contrôles d'accessibilité pondérés par criticité WCAG | 0–100 (A–G) |
+| **Score sécurité** | 14 contrôles serveur pondérés | 0–100 (A–G) |
+| **Score performance serveur** | 7 contrôles d'infrastructure pondérés | 0–100 (A–G) |
+| **EcoIndex** | complexité structurelle : nœuds DOM, requêtes, poids, par quantiles | 0–100 (A–G) |
+| **Score de synthèse** | moyenne 50/50 de l'EcoIndex normalisé et du CO₂ SWDM v4 normalisé | 0–100 (A–G) |
+
+Le score de synthèse croise deux modèles complémentaires. L'EcoIndex pénalise la
+complexité de la page sans regarder le mix électrique. SWDM v4 pondère les
+octets transférés par l'intensité carbone du réseau, l'hébergement et le taux de
+cache. Barème de grade propre à ce score, plus sévère que celui des axes :
+
+| Score | 75+ | 65+ | 50+ | 35+ | 20+ | 5+ | < 5 |
+| ----- | --- | --- | --- | --- | -- | --- | --- |
+| Grade | A | B | C | D | E | F | G |
+
+Il est accompagné d'un **indice de confiance**, calculé sur l'écart entre les
+deux modèles : `high` sous 15 points d'écart, `medium` sous 30, `low` au-delà.
+Un indice `low` signale un diagnostic à lire avec prudence, par exemple une page
+légère hébergée sur un mix carboné, et le rapport explique lequel des deux
+modèles tire le score vers le bas.
+
+### 5.2 Métriques environnementales
 
 | Métrique | Modèle | Unité |
 | -------- | ------ | ----- |
-| **Score de durabilité** | Pondération des règles d'éco-conception | 0–100 (A–G) |
-| **CO₂ par visite** | Sustainable Web Design v4 + green hosting (Green Web Foundation) | g CO₂eq |
-| **Eau par visite** | SWD v4 × WUE (1.8 L/kWh — moyenne UNESCO) | cL |
-| **Énergie par visite** | SWD v4 (0.81 kWh/GB transféré) | Wh |
-| **CO₂ pour 1 M visites** | extrapolation linéaire | kg CO₂eq |
-| **Eau pour 1 M visites** | extrapolation linéaire | L |
-| **Énergie pour 1 M visites** | extrapolation linéaire | kWh |
+| **CO₂ par visite** | Sustainable Web Design v4 + hébergement vert (Green Web Foundation) | g CO₂eq |
+| **CO₂ pondéré par le cache** | SWDM v4, part de visiteurs récurrents prise en compte | g CO₂eq |
+| **Eau par visite** | SWD v4 × WUE (1,8 L/kWh, moyenne UNESCO) | cL |
+| **Énergie par visite** | SWD v4 (0,30 kWh/Go transféré) | Wh |
+| **CO₂, eau et énergie pour 1 M visites** | extrapolation linéaire | kg CO₂eq, L, kWh |
 | **Hébergement vert** | API Green Web Foundation | booléen (A/C) |
+| **Intensité carbone du terminal, du réseau et du datacenter** | table par pays, ou valeurs forcées via `--grid_*_gco2` | gCO₂/kWh |
+| **Pays du datacenter** | détection par en-têtes CDN puis géolocalisation IP, ou `--dc_country` | code ISO 3166-1 alpha-3 |
+| **Poids transféré** | HAR, cache navigateur et service worker désactivés | Ko |
+
+L'EcoIndex donne en plus sa propre estimation de CO₂ et d'eau, par visite et
+pour 1 million de visites, calculée selon la formule ecoindex.fr. Les deux
+estimations figurent côte à côte dans le rapport.
+
+### 5.3 Sorties d'analyse
+
+Au-delà des chiffres, chaque rapport multi-pages contient :
+
+| Sortie | Contenu |
+| ------ | ------- |
+| **Recommandations priorisées** | phrases générées à partir des mesures : DOM trop dense, requêtes à consolider, poids à réduire, hébergement à migrer, mix électrique carboné |
+| **Pires pages** | classement environnement et classement accessibilité, longueur réglable par `--worst_pages` |
+| **Meilleures pages** | mêmes classements, dans l'autre sens |
+| **Pires règles** | règles les plus souvent en échec sur l'ensemble du site, longueur réglable par `--worst_rules` |
+| **Exemples fautifs** | pour les contrôles d'accessibilité, les éléments concrets en cause, extraits du DOM |
+| **Contexte d'exécution** | date, appareil simulé, type de connexion, nombre de scénarios, timeout, nombre d'onglets, erreurs rencontrées |
 
 ---
 
@@ -877,4 +936,4 @@ En cas de doute, le [texte officiel de l'AGPL-3.0](https://www.gnu.org/licenses/
 - Algorithme EcoIndex et règles d'éco-conception : [collectif GreenIT.fr](https://collectif.greenit.fr/), [ecoindex.fr](https://www.ecoindex.fr/).
 - Extension GreenIT-Analysis : [cnumr / didierfred](https://github.com/cnumr/GreenIT-Analysis).
 - Modèle Sustainable Web Design v4 : [Green Web Foundation](https://www.thegreenwebfoundation.org/).
-- Intégration CLI, refonte 2026, modèles synthétique / NegaOctet / ARCEP / ADEME : Institut du Numérique Responsable.
+- Intégration CLI, refonte 2026, modèle de synthèse et calibrage ARCEP / ADEME : Institut du Numérique Responsable.

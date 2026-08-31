@@ -104,7 +104,7 @@ The HTML report opens in any browser (`open` on macOS, `xdg-open` on Linux, doub
 
 ### Typical command — full crawl audit of a French site
 
-Typical case: automatically crawling a public-facing site hosted or accessed from France, using the NegaOctet/ARCEP/ADEME methodology.
+Typical case: automatically crawling a public-facing site hosted or accessed from France, using the ARCEP/ADEME calibrated methodology.
 
 ```bash
 nr analyse \
@@ -178,7 +178,7 @@ nr analyse \
 
 ### Shell alias (optional)
 
-To avoid repeating the FR/NegaOctet flags, add to `~/.zshrc` (or `~/.bashrc`):
+To avoid repeating the French flags, add to `~/.zshrc` (or `~/.bashrc`):
 
 ```bash
 alias nr-fr='nr analyse --ci'
@@ -523,7 +523,7 @@ nr analyse [url_input_file] [report_output_file] [options]
 | `--grid_device_gco2`  |       | Override device carbon intensity in gCO₂/kWh (plug in an up-to-date Electricity Maps value). Takes priority over `--country` |           |
 | `--grid_dc_gco2`      |       | Override datacenter carbon intensity in gCO₂/kWh                          |           |
 | `--grid_network_gco2` |       | Override network carbon intensity in gCO₂/kWh                             |           |
-| `--methodology`       |       | CO₂ model: `negaoctet` (SWDM v4 + a device lifecycle overhead calibrated on NegaOctet/ARCEP/ADEME for France) or `swdm-v4` (bytes transferred only) | `negaoctet` |
+| `--methodology`       |       | CO₂ model: `negaoctet` (SWDM v4 + a device lifecycle overhead calibrated on French studies) or `swdm-v4` (bytes transferred only) | `negaoctet` |
 | `--wait_until`        |       | Puppeteer navigation event to wait for: `domcontentloaded`, `load`, `networkidle0`, `networkidle2` | `domcontentloaded` |
 | `--grafana_link`      |       | Grafana dashboard URL (for `influxdbhtml` format)                         |           |
 | `--influxdb_hostname` |       | InfluxDB instance URL                                                     |           |
@@ -541,7 +541,7 @@ The tool exposes three complementary indicators in the report:
 | EcoIndex | official ecoindex.fr formula (DOM × 3, requests × 2, weight × 1) | Structural eco-design tracking |
 | Synthetic score | EcoIndex and SWD, normalized then weighted 50/50, with a confidence factor | Overall page score |
 
-The `--methodology negaoctet` flag enriches SWDM v4 with a per-visit overhead calibrated on French studies (NegaOctet 2022, ARCEP/ADEME 2022, ADEME Base Empreinte 2024), capturing the device lifecycle share that the bytes-only model misses. Recommended for a public-facing site hosted or accessed in France.
+The `--methodology negaoctet` flag enriches SWDM v4 with a per-visit overhead calibrated on French studies (ARCEP/ADEME 2022, ADEME Base Empreinte 2024), capturing the device lifecycle share that the bytes-only model misses. Recommended for a public-facing site hosted or accessed in France.
 
 The `--dc_country` flag (or CDN/IP auto-detection) separates the datacenter's carbon intensity from the visitor's. This matters when the datacenter country differs from the visitor's country — for example a French visitor with hosting on AWS Ireland.
 
@@ -670,13 +670,28 @@ Every audited page is scored on 4 independent axes. The overall grade runs from 
 | Security (cyber) | 0–100 | 14 server checks (TLS, HTTP headers, cookies, DNSSEC…) |
 | Server performance | 0–100 | 7 infrastructure checks (HTTP/2, compression, cache, CDN…) |
 
-Each rule returns a compliance level:
+Each rule returns a compliance level: `A` (rule met), `B` (minor improvement
+needed) or `C` (rule not met).
 
-- `A`: rule met
-- `B`: minor improvement needed
-- `C`: rule not met
+An axis score is the average of those levels, weighted by the criticality of
+each rule. The conversion into points differs per axis:
 
-The overall score for an axis is the weighted average of these levels, by criticality.
+| Axis | A | B | C | Weighting | File |
+| ---- | - | - | - | --------- | ---- |
+| Environment | 1.0 | 0.6 | 0 | `impact` field in `conf/rules.js`, 1 to 9 | `cli-core/scoring.js` |
+| Social | 1.0 | 0.5 | 0 | `CHECK_WEIGHTS`, 2 to 5 by WCAG criticality | `cli-core/socialScoring.js` |
+| Security and performance | 1.0 | 0.5 | 0 | `SECURITY_WEIGHTS` and `SERVER_WEIGHTS`, 1 to 5 | `cli-core/auditScoring.js` |
+
+The four axes share the same grade scale:
+
+| Score | 90+ | 75+ | 60+ | 45+ | 30+ | 15+ | < 15 |
+| ----- | --- | --- | --- | --- | --- | --- | ---- |
+| Grade | A | B | C | D | E | F | G |
+
+The synthetic score uses a stricter scale, described in section 5.
+
+The environment axis also produces a per-category WSG score (`Web Development`,
+`UX Design`, `Hosting & Infrastructure`, `NR`), shown in the HTML report.
 
 ---
 
@@ -822,20 +837,64 @@ The overall score for an axis is the weighted average of these levels, by critic
 
 ---
 
-## 5. Computed environmental metrics
+## 5. Computed scores and metrics
 
-Besides the rules, the tool estimates for each page:
+### 5.1 The six scores
+
+| Score | What it measures | Scale |
+| ----- | ---------------- | ----- |
+| Sustainability score | eco-design rules weighted by their impact | 0–100 (A–G) |
+| Social score | 17 accessibility checks weighted by WCAG criticality | 0–100 (A–G) |
+| Security score | 14 weighted server checks | 0–100 (A–G) |
+| Server performance score | 7 weighted infrastructure checks | 0–100 (A–G) |
+| EcoIndex | structural complexity: DOM nodes, requests, payload, by quantiles | 0–100 (A–G) |
+| Synthetic score | 50/50 average of the normalized EcoIndex and the normalized SWDM v4 CO₂ | 0–100 (A–G) |
+
+The synthetic score crosses two complementary models. EcoIndex penalizes page
+complexity without looking at the grid mix. SWDM v4 weights transferred bytes by
+grid carbon intensity, hosting and cache ratio. This score has its own grade
+scale, stricter than the one used for the axes:
+
+| Score | 75+ | 65+ | 50+ | 35+ | 20+ | 5+ | < 5 |
+| ----- | --- | --- | --- | --- | --- | -- | --- |
+| Grade | A | B | C | D | E | F | G |
+
+It comes with a confidence level, derived from the gap between the two models:
+`high` under 15 points, `medium` under 30, `low` beyond. A `low` confidence
+flags a diagnosis to read carefully, for instance a light page hosted on a
+carbon-heavy grid, and the report states which of the two models drags the score
+down.
+
+### 5.2 Environmental metrics
 
 | Metric | Model | Unit |
 | ------ | ----- | ---- |
-| Sustainability score | Weighted eco-design rules | 0–100 (A–G) |
 | CO₂ per visit | Sustainable Web Design v4 + green hosting (Green Web Foundation) | g CO₂eq |
-| Water per visit | SWD v4 × WUE (1.8 L/kWh — UNESCO average) | cL |
-| Energy per visit | SWD v4 (0.81 kWh/GB transferred) | Wh |
-| CO₂ for 1M visits | linear extrapolation | kg CO₂eq |
-| Water for 1M visits | linear extrapolation | L |
-| Energy for 1M visits | linear extrapolation | kWh |
+| Cache-weighted CO₂ | SWDM v4, accounting for returning visitors | g CO₂eq |
+| Water per visit | SWD v4 × WUE (1.8 L/kWh, UNESCO average) | cL |
+| Energy per visit | SWD v4 (0.30 kWh/GB transferred) | Wh |
+| CO₂, water and energy for 1M visits | linear extrapolation | kg CO₂eq, L, kWh |
 | Green hosting | Green Web Foundation API | boolean (A/C) |
+| Device, network and datacenter grid intensity | per-country table, or values forced through `--grid_*_gco2` | gCO₂/kWh |
+| Datacenter country | detected from CDN headers then IP geolocation, or `--dc_country` | ISO 3166-1 alpha-3 code |
+| Transferred payload | HAR, with browser cache and service worker disabled | KB |
+
+EcoIndex also produces its own CO₂ and water estimates, per visit and per
+million visits, following the ecoindex.fr formula. Both estimates sit side by
+side in the report.
+
+### 5.3 Analysis outputs
+
+Beyond the figures, every multi-page report contains:
+
+| Output | Content |
+| ------ | ------- |
+| Prioritised recommendations | sentences generated from the measures: DOM too dense, requests to consolidate, payload to reduce, hosting to migrate, carbon-heavy grid |
+| Worst pages | environment ranking and accessibility ranking, length set by `--worst_pages` |
+| Best pages | same rankings, the other way round |
+| Worst rules | rules failing most often across the site, length set by `--worst_rules` |
+| Failing examples | for accessibility checks, the actual offending elements, extracted from the DOM |
+| Run context | date, simulated device, connection type, number of scenarios, timeout, tab count, errors encountered |
 
 ---
 
@@ -876,4 +935,4 @@ When in doubt, the [official AGPL-3.0 text](https://www.gnu.org/licenses/agpl-3.
 - EcoIndex algorithm and eco-design rules: [GreenIT.fr collective](https://collectif.greenit.fr/), [ecoindex.fr](https://www.ecoindex.fr/).
 - GreenIT-Analysis extension: [cnumr / didierfred](https://github.com/cnumr/GreenIT-Analysis).
 - Sustainable Web Design v4 model: [Green Web Foundation](https://www.thegreenwebfoundation.org/).
-- CLI integration, 2026 rework, synthetic / NegaOctet / ARCEP / ADEME models: Institut du Numérique Responsable.
+- CLI integration, 2026 rework, synthetic model and ARCEP / ADEME calibration: Institut du Numérique Responsable.
