@@ -48,12 +48,14 @@ Puppeteer 23.9+ (Chromium headless, ignore SSL, mode non-headless), Node.js ES20
 # Sommaire
 
 - [Pour commencer](#pour-commencer)
+  - [Démarrage rapide (5 min)](#démarrage-rapide-5-min)
   - [Prérequis](#prérequis)
-  - [Installation](#installation)
+  - [Installation détaillée](#installation-détaillée)
 - [Usage](#usage)
   - [Analyse](#analyse)
     - [Analyse directe d'une URL](#analyse-directe-dune-url)
-    - [Analyse via fichier YAML](#analyse-via-fichier-yaml)
+    - [Analyse multi-pages via fichier plat `urls.txt`](#analyse-multi-pages-via-fichier-plat-urlstxt)
+    - [Analyse via fichier YAML (parcours utilisateur)](#analyse-via-fichier-yaml-parcours-utilisateur)
       - [Construction du fichier d'entrée](#construction-du-fichier-dentrée)
       - [Conditions d'attente](#conditions-dattente)
       - [Actions](#actions)
@@ -64,13 +66,16 @@ Puppeteer 23.9+ (Chromium headless, ignore SSL, mode non-headless), Node.js ES20
         - [text](#text)
     - [Analyse récursive (crawl)](#analyse-récursive-crawl)
     - [Commande complète](#commande-complète)
+    - [Empreinte carbone — choix méthodologique](#empreinte-carbone--choix-méthodologique)
     - [Formats des rapports](#formats-des-rapports)
       - [Excel (xlsx)](#excel-xlsx)
       - [HTML](#html)
       - [InfluxDB/Grafana](#influxdbgrafana)
   - [ParseSiteMap](#parsesitemap)
   - [Flags généraux](#flags-généraux)
-- [Conditions d'utilisation](#conditions-dutilisation)
+- [Référentiel des règles évaluées](#référentiel-des-règles-évaluées)
+- [Contribuer](#contribuer)
+- [Licence et conditions d'utilisation](#licence-et-conditions-dutilisation)
 
 ---
 
@@ -659,10 +664,10 @@ Chaque page auditée est notée sur 4 axes indépendants. Le grade global va de 
 
 | Axe | Score | Source des règles |
 | --- | ----- | ----------------- |
-| **Environnement** | 0–100 | 38 règles d'éco-conception (RGESN, GR491, WSG) exécutées dans la page |
+| **Environnement** | 0–100 | 37 règles d'éco-conception (RGESN, GR491, WSG) exécutées dans la page |
 | **Social (a11y)** | 0–100 | 12 contrôles Tanaguru/RGAA + 5 contrôles complémentaires NR |
-| **Sécurité (cyber)** | 0–100 | 13 contrôles serveur (TLS, en-têtes HTTP, cookies, DNSSEC…) |
-| **Performance serveur** | 0–100 | 9 contrôles d'infrastructure (HTTP/2, compression, cache, CDN…) |
+| **Sécurité (cyber)** | 0–100 | 14 contrôles serveur (TLS, en-têtes HTTP, cookies, DNSSEC…) |
+| **Performance serveur** | 0–100 | 7 contrôles d'infrastructure (HTTP/2, compression, cache, CDN…) |
 
 Chaque règle renvoie un **niveau de conformité** :
 
@@ -674,7 +679,7 @@ Le score global d'un axe est la moyenne pondérée des niveaux selon la criticit
 
 ---
 
-## 1. Environnement — règles d'éco-conception (38)
+## 1. Environnement — règles d'éco-conception (37)
 
 ### 1.1 Optimisation du transfert (poids et requêtes)
 
@@ -781,7 +786,7 @@ Le score global d'un axe est la moyenne pondérée des niveaux selon la criticit
 
 ---
 
-## 3. Cyber — sécurité serveur (13 contrôles)
+## 3. Cyber — sécurité serveur (14 contrôles)
 
 | Contrôle | ID | Ce qu'il vérifie | Sévérité |
 | -------- | -- | ---------------- | -------- |
@@ -798,14 +803,14 @@ Le score global d'un axe est la moyenne pondérée des niveaux selon la criticit
 | Redirection HTTP→HTTPS | `HttpToHttpsRedirect` | Redirection 301 du `http://` vers `https://` | Critique |
 | Cross-Origin Isolation | `CrossOriginIsolation` | COOP + CORP (protection Spectre) | Recommandé |
 | DNSSEC | `Dnssec` | Zone DNS signée | Recommandé |
+| OCSP Stapling | `OcspStapling` | TLS handshake court, révocation pré-signée | Recommandé |
 
 ---
 
-## 4. Performance serveur (9 contrôles)
+## 4. Performance serveur (7 contrôles)
 
 | Contrôle | ID | Ce qu'il vérifie | Sévérité |
 | -------- | -- | ---------------- | -------- |
-| OCSP Stapling | `OcspStapling` | TLS handshake court (révocation pré-signée) | Recommandé |
 | Version HTTP | `HttpVersion` | HTTP/2 ou HTTP/3 (multiplexage) | Important |
 | Cache-Control | `CacheControl` | Politique de cache explicite | Important |
 | Compression | `Compression` | gzip ou Brotli activés (Brotli recommandé) | Important |
@@ -830,6 +835,26 @@ En plus des règles, l'outil estime pour chaque page :
 | **Eau pour 1 M visites** | extrapolation linéaire | L |
 | **Énergie pour 1 M visites** | extrapolation linéaire | kWh |
 | **Hébergement vert** | API Green Web Foundation | booléen (A/C) |
+
+---
+
+# Contribuer
+
+Les contributions sont bienvenues, y compris les corrections de documentation.
+
+- [Guide de contribution](./CONTRIBUTING.md) : processus de pull request et
+  Certificat d'Origine du Développeur (DCO). Les commits doivent être signés
+  avec `git commit -s`.
+- [Architecture et guide du contributeur](./docs/architecture.md) : comment le
+  code est organisé, ce que fait le bundle injecté dans la page, et la marche à
+  suivre pour ajouter une règle ou un contrôle.
+- [Journal des modifications](./CHANGELOG.md) : historique des versions.
+- [Politique de sécurité](./SECURITY.md) : comment signaler une vulnérabilité.
+
+Attention au bundle : `builder.js` concatène le répertoire `nr-core/` en un
+fichier `dist/nrBundle.js`, et c'est ce fichier que Puppeteer injecte dans la
+page auditée. Modifiez `nr-core/` sans relancer `npm run build` et votre code ne
+s'exécute pas.
 
 ---
 

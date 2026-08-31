@@ -174,7 +174,7 @@
 <section>
 <p>Auditer l'écoconception d'un site à la main, extension par extension, page par page, ne tient pas la route au-delà de trois URL. Ce CLI reprend le moteur de règles de l'extension Chrome <a href="https://github.com/cnumr/GreenIT-Analysis">GreenIT-Analysis</a> et l'exécute en tâche de fond, sur autant de pages qu'on veut, dans un vrai Chromium piloté par Puppeteer plutôt que dans une simulation.</p>
 
-<p>On lui donne une URL ou une liste d'URL. Il ouvre chaque page avec le cache désactivé pour ne pas fausser les mesures, applique 38 règles d'écoconception (RGESN, GR491), 17 contrôles d'accessibilité, 13 contrôles de sécurité serveur et 9 contrôles de performance. Il calcule aussi une estimation du CO₂, de l'eau et de l'énergie consommés par visite, avec le modèle Sustainable Web Design v4 et un calibrage NegaOctet/ARCEP/ADEME pour les sites hébergés ou visités en France. Le résultat sort en rapport HTML ou Excel.</p>
+<p>On lui donne une URL ou une liste d'URL. Il ouvre chaque page avec le cache désactivé pour ne pas fausser les mesures, applique 37 règles d'écoconception (RGESN, GR491), 17 contrôles d'accessibilité, 14 contrôles de sécurité serveur et 7 contrôles de performance. Il calcule aussi une estimation du CO₂, de l'eau et de l'énergie consommés par visite, avec le modèle Sustainable Web Design v4 et un calibrage NegaOctet/ARCEP/ADEME pour les sites hébergés ou visités en France. Le résultat sort en rapport HTML ou Excel.</p>
 
 <p>C'est pour les équipes qui doivent documenter un plan d'écoconception, les agences qui auditent des sites clients, ou pour qui veut simplement comparer un site avant et après une refonte.</p>
 </section>
@@ -205,10 +205,10 @@ nr analyse --url https://institutnr.org/</code></pre>
 <h2>Quatre axes, un score chacun</h2>
 <table>
 <tr><th>Axe</th><th>Ce qui est vérifié</th></tr>
-<tr><td>Environnement</td><td>38 règles d'écoconception : poids, requêtes, images, polices, tracking…</td></tr>
+<tr><td>Environnement</td><td>37 règles d'écoconception : poids, requêtes, images, polices, tracking…</td></tr>
 <tr><td>Accessibilité</td><td>12 contrôles Tanaguru/RGAA + 5 contrôles complémentaires</td></tr>
-<tr><td>Sécurité</td><td>13 contrôles serveur : TLS, en-têtes HTTP, cookies, DNSSEC</td></tr>
-<tr><td>Performance serveur</td><td>9 contrôles d'infrastructure : HTTP/2, compression, cache, CDN</td></tr>
+<tr><td>Sécurité</td><td>14 contrôles serveur : TLS, en-têtes HTTP, cookies, DNSSEC</td></tr>
+<tr><td>Performance serveur</td><td>7 contrôles d'infrastructure : HTTP/2, compression, cache, CDN</td></tr>
 </table>
 <p>Le détail complet des 77 règles est dans le <a href="https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli#référentiel-des-règles-évaluées">référentiel du README</a>.</p>
 

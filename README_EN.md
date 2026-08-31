@@ -74,6 +74,7 @@ Puppeteer 23.9+ (headless Chromium, SSL error ignore, non-headless mode), Node.j
   - [ParseSiteMap](#parsesitemap)
   - [General flags](#general-flags)
 - [Rules reference](#rules-reference)
+- [Contributing](#contributing)
 - [License and terms of use](#license-and-terms-of-use)
 
 ---
@@ -664,10 +665,10 @@ Every audited page is scored on 4 independent axes. The overall grade runs from 
 
 | Axis | Score | Rule source |
 | ---- | ----- | ------------ |
-| Environment | 0–100 | 38 eco-design rules (RGESN, GR491, WSG) run in-page |
+| Environment | 0–100 | 37 eco-design rules (RGESN, GR491, WSG) run in-page |
 | Social (a11y) | 0–100 | 12 Tanaguru/RGAA checks + 5 additional checks |
-| Security (cyber) | 0–100 | 13 server checks (TLS, HTTP headers, cookies, DNSSEC…) |
-| Server performance | 0–100 | 9 infrastructure checks (HTTP/2, compression, cache, CDN…) |
+| Security (cyber) | 0–100 | 14 server checks (TLS, HTTP headers, cookies, DNSSEC…) |
+| Server performance | 0–100 | 7 infrastructure checks (HTTP/2, compression, cache, CDN…) |
 
 Each rule returns a compliance level:
 
@@ -679,7 +680,7 @@ The overall score for an axis is the weighted average of these levels, by critic
 
 ---
 
-## 1. Environment — eco-design rules (38)
+## 1. Environment — eco-design rules (37)
 
 ### 1.1 Transfer optimization (weight and requests)
 
@@ -786,7 +787,7 @@ The overall score for an axis is the weighted average of these levels, by critic
 
 ---
 
-## 3. Cyber — server security (13 checks)
+## 3. Cyber — server security (14 checks)
 
 | Check | ID | What it verifies | Severity |
 | ----- | -- | ------------------- | -------- |
@@ -803,14 +804,14 @@ The overall score for an axis is the weighted average of these levels, by critic
 | HTTP→HTTPS redirect | `HttpToHttpsRedirect` | 301 redirect from `http://` to `https://` | Critical |
 | Cross-Origin Isolation | `CrossOriginIsolation` | COOP + CORP (Spectre mitigation) | Recommended |
 | DNSSEC | `Dnssec` | DNS zone is signed | Recommended |
+| OCSP Stapling | `OcspStapling` | Short TLS handshake, pre-signed revocation | Recommended |
 
 ---
 
-## 4. Server performance (9 checks)
+## 4. Server performance (7 checks)
 
 | Check | ID | What it verifies | Severity |
 | ----- | -- | ------------------- | -------- |
-| OCSP Stapling | `OcspStapling` | Short TLS handshake (pre-signed revocation) | Recommended |
 | HTTP version | `HttpVersion` | HTTP/2 or HTTP/3 (multiplexing) | Important |
 | Cache-Control | `CacheControl` | Explicit cache policy | Important |
 | Compression | `Compression` | gzip or Brotli enabled (Brotli recommended) | Important |
@@ -835,6 +836,24 @@ Besides the rules, the tool estimates for each page:
 | Water for 1M visits | linear extrapolation | L |
 | Energy for 1M visits | linear extrapolation | kWh |
 | Green hosting | Green Web Foundation API | boolean (A/C) |
+
+---
+
+# Contributing
+
+Contributions are welcome, documentation fixes included.
+
+- [Contribution guide](./CONTRIBUTING.md): pull request process and Developer
+  Certificate of Origin (DCO). Commits must be signed off with `git commit -s`.
+- [Architecture and contributor guide](./docs/architecture.en.md): how the code
+  is laid out, what the bundle injected into the page does, and the steps to add
+  a rule or a check.
+- [Changelog](./CHANGELOG.md): release history.
+- [Security policy](./SECURITY.md): how to report a vulnerability.
+
+Mind the bundle: `builder.js` concatenates the `nr-core/` directory into a
+`dist/nrBundle.js` file, and Puppeteer injects that file into the audited page.
+Change `nr-core/` without running `npm run build` and your code never runs.
 
 ---
 

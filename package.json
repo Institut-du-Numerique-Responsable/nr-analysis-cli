@@ -1,19 +1,57 @@
 {
     "name": "numerique-responsable-cli",
     "version": "1.0.0",
-    "description": "",
-    "main": "index.js",
+    "description": "CLI d'audit d'écoconception, d'accessibilité et de sécurité de pages web, aligné sur le RGESN / Eco-design, accessibility and security audit CLI for web pages",
+    "keywords": [
+        "ecoconception",
+        "ecodesign",
+        "rgesn",
+        "green-it",
+        "sustainability",
+        "accessibility",
+        "rgaa",
+        "ecoindex",
+        "co2",
+        "puppeteer",
+        "audit",
+        "cli"
+    ],
+    "homepage": "https://institut-du-numerique-responsable.github.io/nr-analysis-cli/",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli.git"
+    },
+    "bugs": {
+        "url": "https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli/issues"
+    },
+    "author": "Institut du Numérique Responsable (https://institutnr.org)",
+    "license": "AGPL-3.0-or-later",
     "bin": {
         "nr": "nr"
     },
-    "scripts": {
-        "postinstall": "node builder.js",
-        "test": "echo \"Error: no test specified\" && exit 1",
-        "build": "node builder.js",
-        "start": "node index.js"
+    "engines": {
+        "node": ">=18"
     },
-    "author": "",
-    "license": "AGPL-3.0-or-later",
+    "files": [
+        "nr",
+        "builder.js",
+        "sizes.js",
+        "cli-core/",
+        "commands/",
+        "conf/",
+        "locales/",
+        "nr-core/",
+        "samples/",
+        "README.md",
+        "README_EN.md",
+        "CHANGELOG.md",
+        "LICENSE"
+    ],
+    "scripts": {
+        "build": "node builder.js",
+        "postinstall": "node builder.js",
+        "test": "echo \"Aucun test automatisé pour le moment. Voir docs/architecture.md, section Vérifier une modification.\" && exit 1"
+    },
     "dependencies": {
         "@influxdata/influxdb-client": "^1.20.0",
         "@influxdata/influxdb-client-apis": "^1.20.0",

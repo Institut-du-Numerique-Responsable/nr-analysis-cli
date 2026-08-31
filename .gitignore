@@ -20,3 +20,6 @@ urls-*.txt
 docs/superpowers/
 docs/plans/
 docs/specs/
+# analysis output directories
+results-*/
+resultat-*/
