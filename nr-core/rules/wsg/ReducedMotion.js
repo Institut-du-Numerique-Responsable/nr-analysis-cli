@@ -10,28 +10,42 @@ rulesManager.registerRule({
         this.detailComment = '';
     },
 
-    check: function (measures, resource) {
-        if (this.complianceLevel === 'A') return;
-        if (resource && resource.type === 'stylesheet' && resource.content && resource.content.includes('prefers-reduced-motion')) {
+    check: function (measures) {
+        let hasMotion = false;
+        let hasPreference = false;
+        let unreadable = false;
+        const inspectStyle = (style) => {
+            if (!style) return;
+            const nonzero = value => (value || '').split(',').some(x => parseFloat(x) > 0);
+            if ((style.animationName && style.animationName !== 'none' && nonzero(style.animationDuration)) ||
+                nonzero(style.transitionDuration) || style.scrollBehavior === 'smooth') hasMotion = true;
+        };
+        const inspectRules = (rules) => {
+            for (const rule of rules || []) {
+                if (/prefers-reduced-motion\s*:\s*reduce\s*\)/i.test(rule.conditionText || '')) hasPreference = true;
+                inspectStyle(rule.style);
+                try {
+                    if (rule.cssRules) inspectRules(rule.cssRules);
+                    if (rule.styleSheet) inspectRules(rule.styleSheet.cssRules);
+                } catch (_) { unreadable = true; }
+            }
+        };
+        for (const sheet of document.styleSheets || []) {
+            try { inspectRules(sheet.cssRules); } catch (_) { unreadable = true; }
+        }
+        for (const element of document.querySelectorAll('[style]')) inspectStyle(element.style);
+        if (document.getAnimations && document.getAnimations().length) hasMotion = true;
+        const autoplay = measures.autoplayMediaCount > 0;
+        if (!autoplay && hasPreference) {
             this.complianceLevel = 'A';
             this.comment = chrome.i18n.getMessage('rule_ReducedMotion_Comment_OK');
-            return;
+        } else if (!autoplay && !hasMotion && !unreadable) {
+            this.complianceLevel = 'A';
+            this.comment = chrome.i18n.getMessage('rule_ReducedMotion_Comment_NoMotion');
+        } else {
+            this.complianceLevel = !autoplay && !hasMotion && unreadable ? 'B' : 'C';
+            this.comment = chrome.i18n.getMessage(unreadable && !hasMotion && !autoplay
+                ? 'rule_ReducedMotion_Comment_Unknown' : 'rule_ReducedMotion_Comment_KO');
         }
-        try {
-            const sheets = document.styleSheets || [];
-            for (let i = 0; i < sheets.length; i++) {
-                let rules;
-                try { rules = sheets[i].cssRules; } catch (_) { continue; }
-                if (!rules) continue;
-                for (let j = 0; j < rules.length; j++) {
-                    const r = rules[j];
-                    if (r.type === CSSRule.MEDIA_RULE && r.conditionText && r.conditionText.includes('prefers-reduced-motion')) {
-                        this.complianceLevel = 'A';
-                        this.comment = chrome.i18n.getMessage('rule_ReducedMotion_Comment_OK');
-                        return;
-                    }
-                }
-            }
-        } catch (_) {}
     },
-}, 'resourceContentReceived');
+}, 'frameMeasuresReceived');

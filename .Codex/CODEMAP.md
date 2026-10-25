@@ -1,0 +1,15 @@
+# Code map
+- `nr`: CLI options and command dispatch.
+- `builder.js`: concatenates browser audit sources into `dist/nrBundle.js`.
+- `cli-core/analysis.js`: browser navigation, audit injection and report orchestration; exports createJsonReports and login.
+- `cli-core/serverAudit.js`: HTTP, TLS and DNS probes; exports auditServer, SEVERITY, getSeverity.
+- `cli-core/co2Client.js`: environmental estimates and transfer score; exports computeCo2, computeEcoIndexImpact, checkGreenHosting.
+- `nr-core/greenpanel.js`: browser measurement orchestration; launchAnalyse and MeasuresAcquisition.
+- `nr-core/analyseFrameCore.js`: DOM, media and accessibility measurements.
+- `nr-core/rulesManager.js`: rule registration and event dispatch.
+- `nr-core/utils.js`: resource types, compression and cache helpers.
+- `nr-core/rules/`: resource audit rules, including CompressHttp.
+- `nr-core/rules/wsg/ReducedMotion.js`: motion preference check, triggered on frame measurements.
+- `locales/fr.json`, `locales/en.json`: translated rule messages.
+- `tests/regressions.test.js`: compression, emissions scoring, HTTP protocol and motion regressions.
+- `tests/browser.test.js`: real Chromium regression for strict CSP and repeated audits.
