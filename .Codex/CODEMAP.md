@@ -13,3 +13,5 @@
 - `locales/fr.json`, `locales/en.json`: translated rule messages.
 - `tests/regressions.test.js`: compression, emissions scoring, HTTP protocol and motion regressions.
 - `tests/browser.test.js`: real Chromium regression for strict CSP and repeated audits.
+- `tests/server.test.js`: real TLS ALPN and HTTP response regressions.
+- `.github/workflows/test.yml`: runs the complete regression suite with Chromium.

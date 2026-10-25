@@ -2,7 +2,9 @@ name: Audit regression tests
 on:
   pull_request:
   push:
-    branches: [main, fix/audit-issues-2-6]
+    branches: [main]
+permissions:
+  contents: read
 jobs:
   test:
     runs-on: ubuntu-latest

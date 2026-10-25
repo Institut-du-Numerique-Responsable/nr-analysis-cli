@@ -71,3 +71,11 @@ test('autoplay and unreadable CSS cannot silently pass ReducedMotion', () => {
         assert.notEqual(r.complianceLevel, 'A');
     }
 });
+test('opt-in motion passes but does not exempt unguarded motion', () => {
+    const guarded = { conditionText: '(prefers-reduced-motion: no-preference)', cssRules: [{ style: { transitionDuration: '1s' } }] };
+    for (const [rules, expected] of [[ [guarded], 'A' ], [ [guarded, { style: { transitionDuration: '1s' } }], 'C' ]]) {
+        const r = rule('nr-core/rules/wsg/ReducedMotion.js', { styleSheets: [{ cssRules: rules }], querySelectorAll: () => [], getAnimations: () => [] });
+        r.check({ autoplayMediaCount: 0 });
+        assert.equal(r.complianceLevel, expected);
+    }
+});

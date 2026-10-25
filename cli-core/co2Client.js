@@ -162,6 +162,8 @@ function computeCo2(responsesSizeBytes, isGreen = false, options = {}) {
                 ? 'SWDM v4 + NegaOctet/ARCEP/ADEME (FR LCA)'
                 : 'SWDM v4 (transferred bytes only)',
         result: {
+            scoredGrams,
+            scoreScope: 'transferred-bytes',
             complianceLevel,
             comment: String(rounded),
             detailComment: methodology === 'negaoctet'

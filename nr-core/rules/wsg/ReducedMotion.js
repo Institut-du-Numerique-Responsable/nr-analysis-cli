@@ -22,6 +22,8 @@ rulesManager.registerRule({
         };
         const inspectRules = (rules) => {
             for (const rule of rules || []) {
+                // Motion in this branch is disabled when the user requests reduction.
+                if (/^\s*\(prefers-reduced-motion\s*:\s*no-preference\)\s*$/i.test(rule.conditionText || '')) continue;
                 if (/prefers-reduced-motion\s*:\s*reduce\s*\)/i.test(rule.conditionText || '')) hasPreference = true;
                 inspectStyle(rule.style);
                 try {
@@ -34,7 +36,10 @@ rulesManager.registerRule({
             try { inspectRules(sheet.cssRules); } catch (_) { unreadable = true; }
         }
         for (const element of document.querySelectorAll('[style]')) inspectStyle(element.style);
-        if (document.getAnimations && document.getAnimations().length) hasMotion = true;
+        // CSS animations/transitions are already covered by their conditional rules.
+        // Web Animations created by script still need a manual preference check.
+        if (document.getAnimations && document.getAnimations().some(animation =>
+            !['CSSAnimation', 'CSSTransition'].includes(animation.constructor.name))) hasMotion = true;
         const autoplay = measures.autoplayMediaCount > 0;
         if (!autoplay && hasPreference) {
             this.complianceLevel = 'A';

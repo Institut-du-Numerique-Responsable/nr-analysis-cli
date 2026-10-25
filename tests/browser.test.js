@@ -2,9 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const vm = require('node:vm');
 const Module = require('node:module');
-const { computeCo2 } = require('../cli-core/co2Client');
 const root = path.resolve(__dirname, '..');
 function internals(file, names) {
     const filename = path.join(root, file);
@@ -55,7 +53,9 @@ test('ReducedMotion runs on pages without resource events and detects CSS motion
             ['<style>@supports(display:grid) { button { transition: opacity 1s; } }</style><button>Hover</button>', 'C'],
             ['<div style="scroll-behavior:smooth">Scroll</div>', 'C'],
             ['<style>@media(prefers-reduced-motion:reduce) { * { animation: none; } }</style>', 'A'],
-            ['<style>@media(prefers-reduced-motion:no-preference) { button { transition: opacity 1s; } }</style>', 'C'],
+            ['<style>@media(prefers-reduced-motion:no-preference) { button { transition: opacity 1s; } }</style>', 'A'],
+            ['<style>@keyframes spin { to { transform:rotate(360deg); } } @media(prefers-reduced-motion:no-preference) { div { animation:spin 1s infinite; } }</style><div>Motion</div>', 'A'],
+            ['<style>@media(prefers-reduced-motion:no-preference) { button { transition: opacity 1s; } } div { transition: opacity 1s; }</style>', 'C'],
         ]) {
             await page.setContent(html);
             const result = await page.evaluate(new Function(manager + '\n' + motion + `
