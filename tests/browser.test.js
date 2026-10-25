@@ -42,3 +42,29 @@ test('strict CSP allows the audit while continuing to block page scripts', async
         await har.stop();
     } finally { await browser.close(); }
 });
+
+test('ReducedMotion runs on pages without resource events and detects CSS motion', async () => {
+    const browser = await require('puppeteer').launch({ headless: true, executablePath: process.env.CHROME_BIN, args: process.env.CI ? ['--no-sandbox'] : [] });
+    try {
+        const page = await browser.newPage();
+        const manager = fs.readFileSync(path.join(root, 'nr-core/rulesManager.js'), 'utf8');
+        const motion = fs.readFileSync(path.join(root, 'nr-core/rules/wsg/ReducedMotion.js'), 'utf8');
+        for (const [html, grade] of [
+            ['<h1>No motion</h1>', 'A'],
+            ['<style>button { transition: opacity 1s; }</style><button>Hover</button>', 'C'],
+            ['<style>@supports(display:grid) { button { transition: opacity 1s; } }</style><button>Hover</button>', 'C'],
+            ['<div style="scroll-behavior:smooth">Scroll</div>', 'C'],
+            ['<style>@media(prefers-reduced-motion:reduce) { * { animation: none; } }</style>', 'A'],
+            ['<style>@media(prefers-reduced-motion:no-preference) { button { transition: opacity 1s; } }</style>', 'C'],
+        ]) {
+            await page.setContent(html);
+            const result = await page.evaluate(new Function(manager + '\n' + motion + `
+                chrome = {i18n:{getMessage:key=>key}};
+                const checker = rulesManager.getNewRulesChecker();
+                checker.sendEvent('frameMeasuresReceived', {autoplayMediaCount:0});
+                return checker.getRule('ReducedMotion').complianceLevel;
+            `));
+            assert.equal(result, grade, html);
+        }
+    } finally { await browser.close(); }
+});
