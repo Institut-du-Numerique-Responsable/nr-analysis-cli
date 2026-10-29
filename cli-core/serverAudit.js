@@ -20,7 +20,7 @@ async function auditServer(rawUrl) {
     const [dnsInfo, tlsInfo, getRes, plainRes, securityTxt, dnssecInfo] = await Promise.all([
         probeDns(host),
         isHttps ? probeTls(host, port) : Promise.resolve(null),
-        probeRequest(rawUrl, { method: 'GET', acceptEncoding: 'br, gzip, deflate' }),
+        probeRequest(rawUrl, { method: 'GET', acceptEncoding: 'br, zstd, gzip, deflate' }),
         isHttps ? probeRequest(`http://${host}${url.pathname}${url.search}`, { method: 'GET' }) : Promise.resolve(null),
         probeRequest(`${url.protocol}//${host}/.well-known/security.txt`, { method: 'GET' }).catch(() => null),
         probeDnssec(host),
@@ -47,7 +47,7 @@ async function auditServer(rawUrl) {
 
     const server = {
         Compression: checkCompression(getRes, headers),
-        HttpVersion: checkHttpVersion(getRes),
+        HttpVersion: checkHttpVersion(getRes, tlsInfo),
         CacheControl: checkCacheControl(headers),
         DnsIpv6: checkIpv6(dnsInfo),
         DnsRedundancy: checkDnsRedundancy(dnsInfo),
@@ -70,14 +70,14 @@ function probeTls(host, port) {
     return new Promise((resolve) => {
         let ocspStapled = false;
         const socket = tls.connect(
-            { host, port, servername: host, timeout: TIMEOUT_MS, rejectUnauthorized: false, requestOCSP: true },
+            { host, port, servername: host, timeout: TIMEOUT_MS, rejectUnauthorized: false, requestOCSP: true, ALPNProtocols: ['h2', 'http/1.1'] },
             () => {
                 const cipher = socket.getCipher();
                 const proto = socket.getProtocol();
                 const cert = socket.getPeerCertificate();
                 const session = socket.getSession();
                 socket.end();
-                resolve({ protocol: proto, cipher, certIssuer: cert && cert.issuer, validTo: cert && cert.valid_to, hasSession: !!session, ocspStapled });
+                resolve({ protocol: proto, cipher, certIssuer: cert && cert.issuer, validTo: cert && cert.valid_to, hasSession: !!session, ocspStapled, alpnProtocol: socket.alpnProtocol });
             }
         );
         socket.on('OCSPResponse', (data) => { if (data && data.length > 0) ocspStapled = true; });
@@ -263,11 +263,15 @@ function checkCompression(res, h) {
     return failL('aucune compression negociee');
 }
 
-function checkHttpVersion(res) {
+function checkHttpVersion(res, tlsInfo) {
+    const advertisedH3 = /(?:^|,)\s*h3(?:-\d+)?\s*=/i.test(res?.headers?.['alt-svc'] || '');
+    const suffix = advertisedH3 ? ' · HTTP/3 annoncé (non vérifié)' : '';
+    if (tlsInfo?.alpnProtocol === 'h2') return passL('HTTP/2 négocié (ALPN)' + suffix);
     if (!res) return failL('Pas de reponse');
     const v = res.httpVersion;
     if (v === '3.0' || v === '3') return passL('HTTP/3');
-    if (v === '2.0' || v === '2') return passL('HTTP/2');
+    if (v === '2.0' || v === '2') return passL('HTTP/2' + suffix);
+    if (advertisedH3) return warnL(`HTTP/${v || '?'} observé${suffix}`);
     if (v && v.startsWith('1.')) return failL(`HTTP/${v} — pas de multiplexage`);
     return warnL(`version: ${v || '?'}`);
 }

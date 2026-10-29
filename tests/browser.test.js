@@ -1,0 +1,70 @@
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const Module = require('node:module');
+const root = path.resolve(__dirname, '..');
+function internals(file, names) {
+    const filename = path.join(root, file);
+    const mod = new Module(filename, module);
+    mod.filename = filename;
+    mod.paths = Module._nodeModulePaths(path.dirname(filename));
+    mod._compile(fs.readFileSync(filename, 'utf8') + `\nmodule.exports = {${names}};`, filename);
+    return mod.exports;
+}
+test('strict CSP allows the audit while continuing to block page scripts', async () => {
+    const puppeteer = require('puppeteer');
+    const browser = await puppeteer.launch({ headless: true, executablePath: process.env.CHROME_BIN, args: process.env.CI ? ['--no-sandbox'] : [] });
+    try {
+        const { doAnalysis } = internals('cli-core/analysis.js', 'doAnalysis');
+        const page = await browser.newPage();
+        const catalog = JSON.parse(fs.readFileSync(path.join(root, 'locales/fr.json'), 'utf8'));
+        const url = 'data:text/html,' + encodeURIComponent('<!doctype html><meta http-equiv="Content-Security-Policy" content="default-src \'none\'"><title>Static page</title><h1>Audit</h1><script>document.body.dataset.executed="yes"</script>');
+        const Har = require('puppeteer-har');
+        const har = new Har(page);
+        await har.start();
+        await page.goto(url);
+        assert.equal(await page.evaluate(() => document.body.dataset.executed), undefined);
+        for (let i = 0; i < 2; i++) {
+            const result = await doAnalysis(page, har, 'initial', { getCatalog: () => catalog });
+            assert.ok(result.domSize > 0);
+            assert.equal(result.bestPractices.ReducedMotion.complianceLevel, 'A');
+        }
+        // The page's own scripts remain subject to CSP after the audit too.
+        await page.evaluate(() => {
+            const script = document.createElement('script');
+            script.textContent = 'document.body.dataset.executed="yes"';
+            document.body.append(script);
+        });
+        assert.equal(await page.evaluate(() => document.body.dataset.executed), undefined);
+        await har.stop();
+    } finally { await browser.close(); }
+});
+
+test('ReducedMotion runs on pages without resource events and detects CSS motion', async () => {
+    const browser = await require('puppeteer').launch({ headless: true, executablePath: process.env.CHROME_BIN, args: process.env.CI ? ['--no-sandbox'] : [] });
+    try {
+        const page = await browser.newPage();
+        const manager = fs.readFileSync(path.join(root, 'nr-core/rulesManager.js'), 'utf8');
+        const motion = fs.readFileSync(path.join(root, 'nr-core/rules/wsg/ReducedMotion.js'), 'utf8');
+        for (const [html, grade] of [
+            ['<h1>No motion</h1>', 'A'],
+            ['<style>button { transition: opacity 1s; }</style><button>Hover</button>', 'C'],
+            ['<style>@supports(display:grid) { button { transition: opacity 1s; } }</style><button>Hover</button>', 'C'],
+            ['<div style="scroll-behavior:smooth">Scroll</div>', 'C'],
+            ['<style>@media(prefers-reduced-motion:reduce) { * { animation: none; } }</style>', 'A'],
+            ['<style>@media(prefers-reduced-motion:no-preference) { button { transition: opacity 1s; } }</style>', 'A'],
+            ['<style>@keyframes spin { to { transform:rotate(360deg); } } @media(prefers-reduced-motion:no-preference) { div { animation:spin 1s infinite; } }</style><div>Motion</div>', 'A'],
+            ['<style>@media(prefers-reduced-motion:no-preference) { button { transition: opacity 1s; } } div { transition: opacity 1s; }</style>', 'C'],
+        ]) {
+            await page.setContent(html);
+            const result = await page.evaluate(new Function(manager + '\n' + motion + `
+                chrome = {i18n:{getMessage:key=>key}};
+                const checker = rulesManager.getNewRulesChecker();
+                checker.sendEvent('frameMeasuresReceived', {autoplayMediaCount:0});
+                return checker.getRule('ReducedMotion').complianceLevel;
+            `));
+            assert.equal(result, grade, html);
+        }
+    } finally { await browser.close(); }
+});

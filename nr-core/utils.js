@@ -112,7 +112,7 @@ const others = [
 
 const staticResources = [].concat(image, javascript, font, css, audio, video, manifest, others);
 
-const httpCompressionTokens = ['br', 'compress', 'deflate', 'gzip', 'pack200-gzip'];
+const httpCompressionTokens = ['zstd', 'br', 'compress', 'deflate', 'gzip', 'pack200-gzip'];
 
 const httpRedirectCodes = [301, 302, 303, 307];
 
