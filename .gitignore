@@ -19,4 +19,4 @@ urls-*.txt
 .Rhistory
 docs/superpowers/
 docs/plans/
-docs/specs/
+docs/specs/results-*/
