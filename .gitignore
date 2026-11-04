@@ -19,4 +19,6 @@ urls-*.txt
 .Rhistory
 docs/superpowers/
 docs/plans/
-docs/specs/results-*/
+docs/specs/
+results-*/
+
