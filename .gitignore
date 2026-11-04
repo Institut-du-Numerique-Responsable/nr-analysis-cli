@@ -20,3 +20,5 @@ urls-*.txt
 docs/superpowers/
 docs/plans/
 docs/specs/
+results-*/
+

@@ -4,6 +4,7 @@
  */
 
 const tls = require('tls');
+const net = require('net');
 const dns = require('dns').promises;
 const https = require('https');
 const http = require('http');
@@ -70,7 +71,7 @@ function probeTls(host, port) {
     return new Promise((resolve) => {
         let ocspStapled = false;
         const socket = tls.connect(
-            { host, port, servername: host, timeout: TIMEOUT_MS, rejectUnauthorized: false, requestOCSP: true, ALPNProtocols: ['h2', 'http/1.1'] },
+            { host, port, servername: net.isIP(host) ? undefined : host, timeout: TIMEOUT_MS, rejectUnauthorized: false, requestOCSP: true, ALPNProtocols: ['h2', 'http/1.1'] },
             () => {
                 const cipher = socket.getCipher();
                 const proto = socket.getProtocol();
