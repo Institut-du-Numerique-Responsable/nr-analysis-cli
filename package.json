@@ -8,9 +8,10 @@
     },
     "scripts": {
         "postinstall": "node builder.js",
-        "test": "echo \"Error: no test specified\" && exit 1",
+        "test": "node builder.js && node --test tests/*.test.js",
         "build": "node builder.js",
-        "start": "node index.js"
+        "start": "node index.js",
+        "test:unit": "node --test tests/regressions.test.js"
     },
     "author": "",
     "license": "AGPL-3.0-or-later",
