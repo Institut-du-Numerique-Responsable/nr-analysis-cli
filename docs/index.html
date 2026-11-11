@@ -221,7 +221,7 @@ nr analyse --url https://institutnr.org/</code></pre>
 <tr><td>Sécurité</td><td>14 contrôles serveur : TLS, en-têtes HTTP, cookies, DNSSEC</td></tr>
 <tr><td>Performance serveur</td><td>7 contrôles d'infrastructure : HTTP/2, compression, cache, CDN</td></tr>
 </table>
-<p>Chaque règle rend un niveau A, B ou C. Le score d'un axe est la moyenne de ces niveaux pondérée par la criticité de la règle, et se traduit en grade de A à G. Le détail complet des 75 règles et contrôles est dans le <a href="https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli#référentiel-des-règles-évaluées">référentiel du README</a>.</p>
+<p>Chaque règle rend un niveau A, B ou C. Le score d'un axe est la moyenne de ces niveaux pondérée par la criticité de la règle, et se traduit en grade de A à G. Le détail complet des 75 règles et contrôles est dans le <a href="https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli/blob/main/docs/guide.md#référentiel-des-règles-évaluées">guide détaillé</a>.</p>
 
 <h2>Les chiffres produits</h2>
 <p>À côté des quatre scores d'axe, chaque page reçoit un EcoIndex, qui mesure la complexité structurelle (nœuds DOM, requêtes, poids), et un score de synthèse qui croise cet EcoIndex avec l'empreinte carbone SWDM v4. Les deux modèles sont complémentaires : le premier ignore le mix électrique, le second en dépend. Quand ils divergent, l'outil le signale par un indice de confiance et explique lequel tire le score vers le bas.</p>
@@ -241,7 +241,8 @@ nr analyse --url https://institutnr.org/</code></pre>
 
 <h2>Documentation</h2>
 <ul>
-  <li><a href="https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli#readme">README</a> : installation, usage, référentiel complet des règles</li>
+  <li><a href="https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli#readme">README</a> : installation et usage rapide</li>
+  <li><a href="https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli/blob/main/docs/guide.md">Guide détaillé</a> : toutes les options, référentiel complet des règles</li>
   <li><a href="https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli/blob/main/docs/architecture.md">Architecture et guide du contributeur</a> : comment le code est organisé, comment ajouter une règle</li>
   <li><a href="https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli/blob/main/CHANGELOG.md">Journal des modifications</a></li>
   <li><a href="https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli/blob/main/SECURITY.md">Politique de sécurité</a></li>
@@ -249,7 +250,7 @@ nr analyse --url https://institutnr.org/</code></pre>
 </ul>
 
 <h2>Licence</h2>
-<p>AGPL-3.0-or-later. L'outil hérite de composants dérivés de GreenIT-Analysis et d'EcoMeter, sous la même licence. En clair : l'usage commercial est permis, mais si vous déployez une version modifiée comme service accessible à des tiers, vous devez en publier le code source. Les détails sont dans le README.</p>
+<p>AGPL-3.0-or-later. L'outil hérite de composants dérivés de GreenIT-Analysis et d'EcoMeter, sous la même licence. En clair : l'usage commercial est permis, mais si vous déployez une version modifiée comme service accessible à des tiers, vous devez en publier le code source. Les détails sont dans le guide détaillé.</p>
 
 <footer>
   <p><a href="https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli">Institut-du-Numerique-Responsable/nr-analysis-cli</a>, maintenu par l'<a href="https://institutnr.org/">Institut du Numérique Responsable</a>.</p>

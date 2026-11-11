@@ -1,6 +1,6 @@
 {
     "name": "numerique-responsable-cli",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "CLI d'audit d'écoconception, d'accessibilité et de sécurité de pages web, aligné sur le RGESN / Eco-design, accessibility and security audit CLI for web pages",
     "keywords": [
         "ecoconception",

@@ -5,8 +5,28 @@ Le projet suit le [versionnage sémantique](https://semver.org/lang/fr/).
 
 ## [Non publié]
 
+## [1.1.0] - 2026-11-11
+
+### Corrigé
+
+- L'analyse n'échoue plus sur les pages protégées par une CSP stricte
+  (`launchAnalyse is not defined`), sans modifier leur politique (#2).
+- Une ressource servie en zstd est comptée comme compressée (#3).
+- La règle `Co2PerVisit` peut être satisfaite avec la méthode par
+  défaut (#4).
+- La sonde serveur détecte HTTP/2 et HTTP/3 au lieu d'annoncer HTTP/1.1 (#5).
+- `ReducedMotion` n'échoue plus sur un site sans animation, et l'opt-in au
+  mouvement est respecté (#6).
+
+### Ajouté
+
+- Tests de non-régression (`tests/`) lancés par `npm test` et en intégration
+  continue (GitHub Actions).
+
 ### Documentation
 
+- README français et anglais réécrits : présentation, installation et usage
+  simple. Le manuel complet passe dans `docs/guide.md` et `docs/guide.en.md`.
 - Guide d'architecture et de contribution, en français et en anglais
   (`docs/architecture.md`, `docs/architecture.en.md`) : découpage du code entre
   navigateur et Node, chemin d'une analyse, marche à suivre pour ajouter une
@@ -79,5 +99,6 @@ Le dépôt reprend l'historique de GreenIT-Analysis-cli, dont la première versi
 remonte à mars 2021. Les évolutions antérieures à la refonte INR d'avril 2026
 sont consultables dans l'historique Git.
 
-[Non publié]: https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli/compare/v1.0.0...main
+[Non publié]: https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli/compare/v1.1.0...main
+[1.1.0]: https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli/releases/tag/v1.0.0
