@@ -90,7 +90,7 @@ Le rapport global est écrit dans `resultat/`.
 | Option | Effet |
 | ------ | ----- |
 | `--language en` | Rapport en anglais (défaut : `fr`) |
-| `--format xlsx` | Rapport Excel au lieu de HTML (avec `--url`) |
+| `--format xlsx` | Rapport Excel au lieu de HTML |
 | `--mobile` | Simule une connexion mobile |
 | `--device iPhoneX` | Simule un appareil (voir `nr analyse --help`) |
 | `--country FRA` | Pays des visiteurs, pour l'intensité carbone (défaut : `FRA`) |

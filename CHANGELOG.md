@@ -5,6 +5,11 @@ Le projet suit le [versionnage sémantique](https://semver.org/lang/fr/).
 
 ## [Non publié]
 
+### Corrigé
+
+- `nr analyse urls.txt --format xlsx` écrit le rapport Excel dans un fichier
+  `.xlsx`, et non plus dans un fichier nommé `_index.html`.
+
 ## [1.1.0] - 2026-11-11
 
 ### Corrigé

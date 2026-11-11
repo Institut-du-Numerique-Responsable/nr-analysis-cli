@@ -88,7 +88,7 @@ The global report is written to `resultat/`.
 | Option | Effect |
 | ------ | ------ |
 | `--language en` | Report in English (default: `fr`) |
-| `--format xlsx` | Excel report instead of HTML (with `--url`) |
+| `--format xlsx` | Excel report instead of HTML |
 | `--mobile` | Simulates a mobile connection |
 | `--device iPhoneX` | Simulates a device (see `nr analyse --help`) |
 | `--country FRA` | Visitor country, for carbon intensity (default: `FRA`) |
