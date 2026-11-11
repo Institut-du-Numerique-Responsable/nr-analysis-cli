@@ -5,6 +5,8 @@ Le projet suit le [versionnage sémantique](https://semver.org/lang/fr/).
 
 ## [Non publié]
 
+## [1.1.1] - 2026-11-11
+
 ### Corrigé
 
 - `nr analyse urls.txt --format xlsx` écrit le rapport Excel dans un fichier
@@ -104,6 +106,7 @@ Le dépôt reprend l'historique de GreenIT-Analysis-cli, dont la première versi
 remonte à mars 2021. Les évolutions antérieures à la refonte INR d'avril 2026
 sont consultables dans l'historique Git.
 
-[Non publié]: https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli/compare/v1.1.0...main
+[Non publié]: https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli/compare/v1.1.1...main
+[1.1.1]: https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli/releases/tag/v1.0.0
