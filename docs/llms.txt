@@ -1,4 +1,4 @@
-# nr-analysis-cli — Audit d'ecoconception web en ligne de commande
+# nr-analysis-cli : audit d'ecoconception web en ligne de commande
 
 > CLI Node.js qui audite l'empreinte environnementale, l'accessibilite et la securite d'un site web, page par page, et rend un score par axe. Aligne sur le RGESN. Utilisable en local comme en integration continue.
 
@@ -6,11 +6,23 @@
 
 - [Site du projet](https://institut-du-numerique-responsable.github.io/nr-analysis-cli/)
 - [Code source et README](https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli)
+- [README en anglais](https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli/blob/main/README_EN.md)
+- [Architecture et guide du contributeur](https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli/blob/main/docs/architecture.md)
+- [Journal des modifications](https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli/blob/main/CHANGELOG.md)
+- [Politique de securite](https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli/blob/main/SECURITY.md)
+
+## Perimetre
+
+37 regles d'ecoconception (RGESN, GR491, WSG), 17 controles d'accessibilite
+(12 Tanaguru/RGAA et 5 complementaires), 14 controles de securite serveur,
+7 controles de performance serveur. Estimation CO2, eau et energie par visite
+avec Sustainable Web Design v4, EcoIndex, et un score de synthese combinant les
+deux. Sorties HTML, Excel et InfluxDB.
 
 ## Qui publie
 
 Publie par l'**Institut du Numerique Responsable** (INR), association loi 1901
-creee en 2018 : https://institutnr.org — voir aussi ISIT Belgique
+creee en 2018 : https://institutnr.org, voir aussi ISIT Belgique
 (https://isit-be.org) et ISIT Suisse (https://isit-ch.org).
 
 Citation : voir CITATION.cff a la racine du depot.

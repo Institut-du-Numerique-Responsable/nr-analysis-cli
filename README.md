@@ -1,203 +1,42 @@
-[English version](./README_EN.md) · [Page projet](https://institut-du-numerique-responsable.github.io/nr-analysis-cli/)
+[English version](./README_EN.md) · [Page projet](https://institut-du-numerique-responsable.github.io/nr-analysis-cli/) · [Guide détaillé](./docs/guide.md)
 
 # nr-analysis-cli
 
-CLI Node.js d'analyse de l'empreinte écologique de pages web, basé sur l'extension Chrome [GreenIT-Analysis](https://github.com/cnumr/GreenIT-Analysis).
+[![Tests](https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli/actions/workflows/test.yml/badge.svg)](https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli/actions/workflows/test.yml)
+[![Version](https://img.shields.io/github/v/release/Institut-du-Numerique-Responsable/nr-analysis-cli?label=version)](https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli/releases)
+[![Licence AGPL-3.0](https://img.shields.io/badge/licence-AGPL--3.0--or--later-blue)](./LICENSE)
+[![Node.js ≥ 18](https://img.shields.io/badge/node-%E2%89%A5%2018-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
+[![RGESN](https://img.shields.io/badge/r%C3%A9f%C3%A9rentiel-RGESN%20%C2%B7%20WSG%20%C2%B7%20RGAA-2e7d32)](./docs/guide.md#référentiel-des-règles-évaluées)
 
-L'outil simule l'exécution de l'extension sur les pages spécifiées, ouvertes dans Chromium via Puppeteer. Le cache est désactivé pour fiabiliser l'analyse. Il calcule l'**EcoIndex**, la consommation d'eau et les émissions de GES, et vérifie le respect de bonnes pratiques d'éco-conception.
+Outil en ligne de commande qui audite des pages web et mesure leur niveau de
+conformité en **éco-conception**, **accessibilité**, **sécurité** et
+**performance serveur**. Il produit un rapport HTML, Excel ou InfluxDB, avec
+des recommandations priorisées.
 
----
+L'outil ouvre chaque page dans Chromium (via Puppeteer), cache désactivé,
+exécute les règles dans la page puis interroge le serveur. Il dérive de
+l'extension Chrome [GreenIT-Analysis](https://github.com/cnumr/GreenIT-Analysis).
 
-## Mise à jour 2026
+## Ce que mesure l'outil
 
-Cette version ajoute des flags CLI pour l'analyse directe et le crawl, et enrichit les règles d'éco-conception.
+Chaque page reçoit une note de 0 à 100 et un grade de **A** à **G** sur quatre
+axes indépendants :
 
-### Nouveautés côté CLI
+| Axe | Ce qui est vérifié |
+| --- | ------------------ |
+| Environnement | 37 règles d'éco-conception (RGESN, GR491, Web Sustainability Guidelines) |
+| Accessibilité | 17 contrôles (12 Tanaguru / RGAA + 5 contrôles NR) |
+| Sécurité | 14 contrôles serveur : TLS, en-têtes HTTP, cookies, DNSSEC… |
+| Performance serveur | 7 contrôles : HTTP/2, compression, cache, CDN… |
 
-| Fonctionnalité | Description |
-| -------------- | ----------- |
-| `--url <url>` | Analyse directe d'une URL sans fichier YAML, rapport HTML auto-généré dans `~/Downloads/` |
-| `--recursive` | Crawl automatique des liens internes depuis une URL de départ |
-| `--depth <n>` | Profondeur maximale du crawl (défaut : 5) |
-| `--max_pages <n>` | Nombre maximum de pages à crawler et analyser (défaut : 200) |
-| `--language en` | Rapports disponibles en français et en anglais |
+Le rapport donne aussi l'EcoIndex, le CO₂, l'eau et l'énergie par visite
+(modèle Sustainable Web Design v4), et un score de synthèse.
 
-### Règles d'éco-conception
+## Installation
 
-8 règles ajoutées pour couvrir des pratiques qui n'existaient pas ou peu quand le moteur de règles d'origine a été écrit :
-
-| Règle | Quoi ? |
-| ----- | ------- |
-| Formats d'image modernes | Détecte JPEG, PNG, GIF, BMP, recommande AVIF, WebP ou JPEG XL |
-| Lazy loading images & iframes | Vérifie `loading="lazy"` sur les `<img>` et les `<iframe>` |
-| Scripts de tracking | Détecte 30+ domaines : Google, Meta, TikTok Pixel, Snapchat Pixel, Pinterest Tag, Reddit Pixel, OneTrust, Cookiebot, Klaviyo, Brevo… |
-| Autoplay vidéo/audio | Signale tout `<video>` ou `<audio>` avec l'attribut `autoplay` |
-| Optimisation des polices | Contrôle nombre (≤ 2) et poids total (≤ 100 Ko) des fichiers de polices chargés |
-| Ressources bloquant le rendu | Détecte les `<script>` dans `<head>` sans `async`, `defer` ou `type="module"` |
-| Iframes externes | Compte les iframes pointant vers des domaines tiers |
-| Preload/Prefetch excessifs | Signale plus de 5 directives `<link rel="preload/prefetch">` |
-
-Et 6 règles existantes ont été mises à jour : les widgets réseaux sociaux couvrent désormais X.com et les badges LinkedIn, la compression HTTP recommande Brotli avant gzip, les plugins navigateur incluent `<object>` et `<embed>`, et les locales FR/EN ont été actualisées en conséquence (formats modernes, lazy loading, tracking).
-
-### Stack technique
-
-Puppeteer 23.9+ (Chromium headless, ignore SSL, mode non-headless), Node.js ES2020+ (CommonJS, async/await natif), rapports Mustache avec i18n FR/EN complet.
-
----
-
-# Sommaire
-
-- [Pour commencer](#pour-commencer)
-  - [Prérequis](#prérequis)
-  - [Installation](#installation)
-- [Usage](#usage)
-  - [Analyse](#analyse)
-    - [Analyse directe d'une URL](#analyse-directe-dune-url)
-    - [Analyse via fichier YAML](#analyse-via-fichier-yaml)
-      - [Construction du fichier d'entrée](#construction-du-fichier-dentrée)
-      - [Conditions d'attente](#conditions-dattente)
-      - [Actions](#actions)
-        - [click](#click)
-        - [press](#press)
-        - [scroll](#scroll)
-        - [select](#select)
-        - [text](#text)
-    - [Analyse récursive (crawl)](#analyse-récursive-crawl)
-    - [Commande complète](#commande-complète)
-    - [Formats des rapports](#formats-des-rapports)
-      - [Excel (xlsx)](#excel-xlsx)
-      - [HTML](#html)
-      - [InfluxDB/Grafana](#influxdbgrafana)
-  - [ParseSiteMap](#parsesitemap)
-  - [Flags généraux](#flags-généraux)
-- [Conditions d'utilisation](#conditions-dutilisation)
-
----
-
-# Pour commencer
-
-## Démarrage rapide (5 min)
-
-Si vous découvrez l'outil, voici les 4 étapes minimales pour produire votre premier rapport.
-
-```bash
-# 1. Installer Node.js (LTS) — https://nodejs.org/
-# 2. Récupérer et installer le projet
-git clone https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli.git
-cd nr-analysis-cli
-npm install
-npm link
-
-# 3. Auditer une URL
-nr analyse --url https://isit-europe.org/fr/
-
-# 4. Auditer plusieurs pages depuis urls.txt (fourni)
-nr analyse urls.txt
-```
-
-Le rapport HTML s'ouvre dans n'importe quel navigateur (`open` sur macOS, `xdg-open` sur Linux, double-clic sur Windows).
-
-### Commande type — audit crawl complet d'un site français
-
-Cas typique : crawler automatiquement un site grand public hébergé/consulté en France, avec méthodologie NegaOctet/ARCEP/ADEME.
-
-```bash
-nr analyse \
-  --url https://www.bigben-connected.com/ \
-  --recursive \
-  --depth 2 \
-  --max_pages 25 \
-  --ci
-```
-
-| Flag             | Rôle |
-| ---------------- | ---- |
-| `--url <URL>`    | URL de départ (obligatoire pour `--recursive`) |
-| `--recursive`    | Crawl automatique des liens internes |
-| `--depth 2`      | Profondeur 2 (URL initiale + 2 niveaux) |
-| `--max_pages 25` | Plafond à 25 pages analysées |
-| `--ci`           | Désactive la barre de progression (sortie texte exploitable) |
-
-Les flags `--country FRA`, `--language fr`, `--methodology negaoctet` et `--wait_until domcontentloaded` sont les valeurs par défaut.
-
-Le rapport global sort dans `~/Downloads/<date>_<host>.html` (mode `--url`) ou `resultat/<date>_<host>_index.html` (mode fichier `urls.txt`).
-
-### Mémo — lancer une analyse sur un nouveau site
-
-Remplacer l'URL par le site à auditer. Exemple avec `https://institutnr.org/` :
-
-```bash
-cd ~/nr-analysis-cli
-
-nr analyse \
-  --url https://institutnr.org/ \
-  --recursive \
-  --depth 2 \
-  --max_pages 25 \
-  --ci
-```
-
-Le rapport HTML est généré dans `~/Downloads/<date>_institutnr.org.html`.
-
-Pour un audit plus large (site riche en contenu) :
-
-```bash
-nr analyse \
-  --url https://institutnr.org/ \
-  --recursive \
-  --depth 3 \
-  --max_pages 100 \
-  --ci
-```
-
-**Si timeouts persistants**, forcer `--wait_until networkidle2` (attend que le réseau se calme) ou `--wait_until load` (comportement Puppeteer natif) :
-
-```bash
-nr analyse \
-  --url https://institutnr.org/ \
-  --recursive \
-  --depth 2 \
-  --max_pages 25 \
-  --wait_until networkidle2 \
-  --ci
-```
-
-| `--wait_until`     | Quand l'utiliser |
-| ------------------ | ---------------- |
-| `domcontentloaded` | **défaut** — HTML parsé, contourne les scripts bloquants / anti-bot |
-| `networkidle2`     | attend ≤ 2 connexions actives pendant 500 ms — bon compromis |
-| `load`             | attend que toutes les ressources soient chargées (Puppeteer natif) |
-| `networkidle0`     | attend 0 connexion — strict, peut timeout sur sites avec polling |
-
----
-
-### Alias shell (optionnel)
-
-Pour éviter de répéter les flags FR/NegaOctet, ajouter à `~/.zshrc` (ou `~/.bashrc`) :
-
-```bash
-alias nr-fr='nr analyse --ci'
-alias nr-fr-crawl='nr analyse --ci --recursive --depth 2 --max_pages 25'
-```
-
-Puis :
-
-```bash
-nr-fr --url https://www.example.com           # audit page unique
-nr-fr urls.txt                                # audit fichier de liste
-nr-fr-crawl --url https://www.example.com     # crawl 25 pages depth 2
-```
-
-## Prérequis
-
-- **[Node.js](https://nodejs.org/) 18 ou supérieur** (LTS recommandée). Vérifier avec `node -v`.
-- **npm** (livré avec Node.js). Vérifier avec `npm -v`.
-- **git** pour cloner le dépôt.
-- Une connexion Internet (l'outil télécharge Chromium au premier `npm install`).
-
-Pas besoin d'installer Chrome séparément : Puppeteer embarque sa propre version de Chromium.
-
-## Installation détaillée
+Prérequis : [Node.js](https://nodejs.org/) 18 ou plus récent, et git. Chrome
+n'est pas nécessaire : Puppeteer télécharge son propre Chromium (~150 Mo) au
+premier `npm install`.
 
 ```bash
 git clone https://github.com/Institut-du-Numerique-Responsable/nr-analysis-cli.git
@@ -206,650 +45,95 @@ npm install
 npm link
 ```
 
-- `npm install` installe les dépendances **et** Chromium (~150 Mo, premier lancement uniquement).
-- `npm link` crée un lien symbolique global pour utiliser la commande `nr` depuis n'importe quel dossier.
-
-### Vérifier l'installation
+`npm link` rend la commande `nr` disponible partout. Vérifiez l'installation :
 
 ```bash
 nr --help
 ```
 
-Vous devez voir la liste des commandes (`analyse`, `parseSitemap`).
+En cas de souci (`nr: command not found`, `EACCES`, Chromium absent), voir
+[Résolution des problèmes courants](./docs/guide.md#résolution-des-problèmes-courants).
 
-### Résolution des problèmes courants
+## Utilisation
 
-| Problème | Solution |
-| -------- | -------- |
-| `nr: command not found` après `npm link` | Sur Linux/macOS, ajouter `$(npm prefix -g)/bin` au `PATH`, ou relancer le terminal. Sur Windows, utiliser PowerShell en mode administrateur. |
-| `EACCES` lors du `npm link` | `sudo npm link` (ou configurer un préfixe npm utilisateur — voir [npm docs](https://docs.npmjs.com/resolving-eacces-permissions-errors-when-installing-packages-globally)). |
-| Chromium ne se télécharge pas | Réessayer avec `PUPPETEER_DOWNLOAD_HOST=https://storage.googleapis.com npm install`. |
-| Erreur `SSL` sur un site interne | L'outil ignore déjà les erreurs SSL par défaut (Puppeteer 23+). |
-
----
-
-# Usage
-
-## Analyse
-
-### Analyse directe d'une URL
-
-La manière la plus rapide d'analyser un site :
+### Auditer une page
 
 ```bash
 nr analyse --url https://www.example.com
 ```
 
-Le rapport HTML est automatiquement enregistré dans `~/Downloads/<hostname>.html`.
+Le rapport HTML est enregistré dans `~/Downloads/`. Ouvrez-le dans un
+navigateur.
 
-Options utiles en mode `--url` :
+### Auditer tout un site (crawl)
 
 ```bash
-nr analyse --url https://www.example.com --output /tmp/rapport.html --format html
+nr analyse --url https://www.example.com --recursive --depth 2 --max_pages 25
 ```
 
-### Analyse multi-pages via fichier plat `urls.txt`
+L'outil suit les liens internes jusqu'à 2 niveaux de profondeur, dans la limite
+de 25 pages.
 
-C'est la manière la plus simple d'auditer un lot de pages : une URL par ligne dans un fichier texte. Le rapport global agrège les moyennes, les **classements meilleures/pires pages** (environnement et accessibilité) et conserve le détail de chaque page.
+### Auditer une liste de pages
 
-#### 1. Compléter `urls.txt`
-
-Un fichier d'exemple est fourni à la racine du dépôt (`urls.txt`). Format :
-
-```
-# Les commentaires commencent par #
-# Une URL par ligne, lignes vides ignorées
-
-https://www.example.com/
-https://www.example.com/produits
-https://www.example.com/contact
-```
-
-Règles :
-- 1 URL par ligne, sans guillemets ni séparateurs
-- les lignes commençant par `#` sont ignorées (commentaires)
-- les lignes vides sont ignorées
-- les URLs doivent inclure le protocole (`https://`)
-
-#### 2. Lancer l'audit
+Écrivez une URL par ligne dans `urls.txt` (les lignes commençant par `#` sont
+ignorées), puis :
 
 ```bash
 nr analyse urls.txt
 ```
 
-Sorties générées dans le dossier `resultat/` à la racine du dépôt :
-
-Les fichiers sont préfixés par la date (`YYYYMMDDHHMM`) et le hostname du premier site afin de ne pas écraser les audits précédents.
-
-| Fichier | Contenu |
-| ------- | ------- |
-| `resultat/<date>_<host>_index.html` | Rapport global : moyennes env + social + cyber + serveur, KPIs CO₂ / eau / énergie pour 1 M visites, classements top/flop, table des pages |
-| `resultat/<date>_<host>_<n>.html` | Rapport détaillé de chaque page auditée (a11y, bonnes pratiques, étapes, contrôles cyber + serveur) |
-
-Exemple : `resultat/202605120945_isit-europe.org_index.html`
-
-Ouvrir le rapport :
-
-```bash
-open resultat/index.html       # macOS
-xdg-open resultat/index.html   # Linux
-```
-
-#### 3. Options utiles
-
-```bash
-# Ajuster le nombre de pages affichées dans les classements
-nr analyse urls.txt --worst_pages 10
-
-# Audit mobile
-nr analyse urls.txt --mobile
-
-# Rapport en anglais
-nr analyse urls.txt --language en
-```
-
-### Analyse via fichier YAML (parcours utilisateur)
-
-Pour définir des **parcours utilisateur** (clic, saisie, login, scroll), créez un fichier YAML :
-
-```bash
-nr analyse url.yaml results.html
-```
-
-Un exemple de fichier est disponible dans le dossier `samples/`.
-
-#### Construction du fichier d'entrée
-
-Le fichier `<url_input_file>` liste les URL à analyser au format YAML.
-
-| Paramètre           | Type    | Obligatoire | Description                                                         |
-| ------------------- | ------- | ----------- | ------------------------------------------------------------------- |
-| `url`               | string  | Oui         | URL de la page à analyser                                           |
-| `name`              | string  | Non         | Nom affiché dans le rapport                                         |
-| `waitForSelector`   | string  | Non         | Attend que l'élément HTML défini par le sélecteur CSS soit visible  |
-| `waitForXPath`      | string  | Non         | Attend que l'élément HTML défini par le XPath soit visible          |
-| `waitForNavigation` | string  | Non         | Attend la fin du chargement. Valeurs : `load`, `domcontentloaded`, `networkidle0`, `networkidle2` |
-| `waitForTimeout`    | int     | Non         | Attend X ms                                                         |
-| `screenshot`        | string  | Non         | Réalise une capture d'écran de la page (même en cas d'erreur)       |
-| `actions`           | list    | Non         | Réalise une suite d'actions avant d'analyser la page                |
-
-#### Conditions d'attente
-
-Le paramètre `waitForNavigation` exploite les fonctionnalités de Puppeteer :
-
-- `load` : navigation terminée quand l'événement `load` est déclenché.
-- `domcontentloaded` : navigation terminée quand `DOMContentLoaded` est déclenché.
-- `networkidle0` : pas plus de 0 connexion réseau pendant 500 ms.
-- `networkidle2` : pas plus de 2 connexions réseau pendant 500 ms.
-
-Par défaut (aucun `waitFor` défini), l'outil attend l'événement `load`.
-
-Exemple de fichier `url.yaml` :
-
-```yaml
-- name: 'Page d'accueil'
-  url: 'https://www.example.com/'
-
-- name: 'À propos'
-  url: 'https://www.example.com/about'
-  waitForSelector: '#main-content'
-  screenshot: 'results/screenshots/about.png'
-
-- url: 'https://www.example.com/contact'
-  waitForXPath: '//h1'
-```
-
-#### Actions
-
-Les actions permettent de définir un parcours utilisateur avant l'analyse.
-
-| Paramètre           | Type    | Obligatoire | Description                                                                 |
-| ------------------- | ------- | ----------- | --------------------------------------------------------------------------- |
-| `name`              | string  | Non         | Nom de l'action                                                             |
-| `type`              | string  | Oui         | Type : `click`, `press`, `scroll`, `select`, `text`                         |
-| `element`           | string  | Non         | Sélecteur CSS de l'élément DOM cible                                        |
-| `pageChange`        | boolean | Non         | Si `true`, l'action déclenche un changement de page. Défaut : `false`       |
-| `timeoutBefore`     | int     | Non         | Temps d'attente avant l'action (ms). Défaut : 1000                          |
-| `waitForSelector`   | string  | Non         | Attend que le sélecteur CSS soit visible après l'action                     |
-| `waitForXPath`      | string  | Non         | Attend que le XPath soit visible après l'action                             |
-| `waitForNavigation` | string  | Non         | Attend la fin du chargement après l'action                                  |
-| `waitForTimeout`    | int     | Non         | Attend X ms après l'action                                                  |
-| `screenshot`        | string  | Non         | Capture d'écran après l'action (même en cas d'erreur)                       |
-
-##### click
-
-Simule un clic sur un élément de la page.
-
-| Paramètre | Type   | Obligatoire | Description                            |
-| --------- | ------ | ----------- | -------------------------------------- |
-| `element` | string | Oui         | Sélecteur CSS de l'élément à cliquer   |
-
-```yaml
-- name: 'Exemple avec clic'
-  url: 'https://www.example.com/'
-  actions:
-    - name: 'Ouvrir le menu'
-      type: 'click'
-      element: 'button[aria-label="Menu"]'
-      pageChange: true
-      waitForSelector: '#nav-menu'
-```
-
-##### press
-
-Simule l'appui sur une touche du clavier.
-
-| Paramètre | Type   | Obligatoire | Description                                             |
-| --------- | ------ | ----------- | ------------------------------------------------------- |
-| `key`     | string | Oui         | Touche clavier reconnue par Puppeteer (ex. `Enter`, `Tab`) |
-
-```yaml
-- name: 'Exemple avec touche'
-  url: 'https://www.example.com/'
-  actions:
-    - name: 'Valider avec Entrée'
-      type: 'press'
-      key: 'Enter'
-      waitForTimeout: 1500
-```
-
-##### scroll
-
-Simule le défilement vers le bas de la page.
-
-```yaml
-- name: 'Page avec scroll'
-  url: 'https://www.example.com/'
-  actions:
-    - name: 'Scroll automatique'
-      type: 'scroll'
-```
-
-##### select
-
-Simule la sélection de valeurs dans une liste déroulante.
-
-| Paramètre | Type   | Obligatoire | Description                                              |
-| --------- | ------ | ----------- | -------------------------------------------------------- |
-| `element` | string | Oui         | Sélecteur CSS du `<select>`                              |
-| `values`  | list   | Oui         | Liste des valeurs à sélectionner                         |
-
-```yaml
-- name: 'Exemple avec select'
-  url: 'https://www.example.com/'
-  actions:
-    - name: 'Choisir une catégorie'
-      type: 'select'
-      element: '#category'
-      values: ['technology']
-```
-
-##### text
-
-Simule la saisie de texte dans un champ de formulaire.
-
-| Paramètre | Type   | Obligatoire | Description                            |
-| --------- | ------ | ----------- | -------------------------------------- |
-| `element` | string | Oui         | Sélecteur CSS du champ                 |
-| `content` | string | Oui         | Texte à saisir                         |
-
-```yaml
-- name: 'Formulaire de contact'
-  url: 'https://www.example.com/contact'
-  actions:
-    - name: 'Saisir l'email'
-      type: 'text'
-      element: '#email'
-      content: 'test@example.com'
-      timeoutBefore: 1000
-```
-
-### Analyse récursive (crawl)
-
-L'outil peut crawler automatiquement les liens internes d'un site à partir d'une URL de départ :
-
-```bash
-nr analyse --url https://www.example.com --recursive --depth 3 --max_pages 50
-```
-
-| Option        | Description                                               | Défaut |
-| ------------- | --------------------------------------------------------- | ------ |
-| `--recursive` | Active le crawl des liens internes (nécessite `--url`)    | false  |
-| `--depth`     | Profondeur maximale du crawl                              | 5      |
-| `--max_pages` | Nombre maximum de pages à analyser                        | 200    |
-
-### Commande complète
-
-```
-nr analyse [url_input_file] [report_output_file] [options]
-```
-
-**Paramètres positionnels :**
-
-| Paramètre            | Description                                      | Défaut          |
-| -------------------- | ------------------------------------------------ | --------------- |
-| `url_input_file`     | Chemin vers le fichier YAML listant les URL      | `url.yaml`      |
-| `report_output_file` | Chemin du fichier de rapport généré              | `results.xlsx`  |
-
-**Options :**
-
-| Option                | Alias | Description                                                               | Défaut    |
-| --------------------- | ----- | ------------------------------------------------------------------------- | --------- |
-| `--url`               |       | URL à analyser directement (bypass du fichier YAML)                       |           |
-| `--output`            | `-o`  | Chemin du rapport (utilisé avec `--url`)                                  |           |
-| `--format`            | `-f`  | Format du rapport : `xlsx`, `html`, `influxdb`, `influxdbhtml`            |           |
-| `--device`            | `-d`  | Terminal à émuler                                                         | `desktop` |
-| `--headers`           | `-h`  | Chemin vers un fichier YAML de headers HTTP                               |           |
-| `--headless`          |       | Mode headless du navigateur (`true`/`false`)                              | `true`    |
-| `--language`          |       | Langue du rapport (`fr`, `en`)                                            | `fr`      |
-| `--login`             | `-l`  | Chemin vers un fichier YAML de configuration de login                     |           |
-| `--max_tab`           |       | Nombre d'URL analysées en parallèle                                       | `40`      |
-| `--mobile`            |       | Connexion mobile (`true`) ou filaire (`false`)                            | `false`   |
-| `--proxy`             | `-p`  | Chemin vers un fichier YAML de configuration du proxy                     |           |
-| `--retry`             | `-r`  | Nombre d'essais supplémentaires en cas d'échec                            | `2`       |
-| `--timeout`           | `-t`  | Timeout de chargement d'une URL (ms)                                      | `180000`  |
-| `--worst_pages`       |       | Nombre de pages prioritaires dans le résumé                               | `5`       |
-| `--worst_rules`       |       | Nombre de bonnes pratiques prioritaires dans le résumé                    | `5`       |
-| `--recursive`         |       | Crawl récursif des liens internes (nécessite `--url`)                     | `false`   |
-| `--depth`             |       | Profondeur maximale du crawl                                              | `5`       |
-| `--max_pages`         |       | Nombre maximum de pages à crawler et analyser                             | `200`     |
-| `--country`           |       | Pays du visiteur/terminal — ISO 3166-1 alpha-3 (`FRA`, `USA`, `DEU`…). Drive l'intensité carbone du segment device dans SWDM v4 | `FRA` |
-| `--dc_country`        |       | Pays du datacenter/origine — ISO 3166-1 alpha-3. Auto-détecté via `x-amz-cf-pop`, `cf-ray` puis IP geolocation (ipapi.co) si omis | auto |
-| `--grid_device_gco2`  |       | Override intensité carbone terminal en gCO₂/kWh (plug une valeur Electricity Maps à jour). Prioritaire sur `--country`                       |           |
-| `--grid_dc_gco2`      |       | Override intensité carbone datacenter en gCO₂/kWh                         |           |
-| `--grid_network_gco2` |       | Override intensité carbone réseau en gCO₂/kWh                             |           |
-| `--methodology`       |       | Modèle CO₂ : `negaoctet` (SWDM v4 + overhead ACV terminal calibré NegaOctet/ARCEP/ADEME pour la France) ou `swdm-v4` (octets transférés seuls) | `negaoctet` |
-| `--grafana_link`      |       | URL du dashboard Grafana (format `influxdbhtml`)                          |           |
-| `--influxdb_hostname` |       | URL de la base InfluxDB                                                   |           |
-| `--influxdb_org`      |       | Nom de l'organisation InfluxDB                                            |           |
-| `--influxdb_token`    |       | Token de connexion InfluxDB                                               |           |
-| `--influxdb_bucket`   |       | Bucket InfluxDB                                                           |           |
-
-### Empreinte carbone — choix méthodologique
-
-L'outil expose **trois indicateurs complémentaires** dans le rapport :
-
-| Indicateur | Modèle | À quoi ça sert |
-| ---------- | ------ | -------------- |
-| **SWDM v4** | bytes × kWh/GB × gCO₂/kWh (Sustainable Web Design v4, Green Web Foundation) | Bilan GES, scope **livraison** (terminal + réseau + datacenter origine) |
-| **EcoIndex** | formule officielle ecoindex.fr (DOM × 3, requêtes × 2, poids × 1) | Pilotage écoconception structurelle |
-| **Score synthétique** | EcoIndex et SWD normalisés puis pondérés 50/50 + confidence | Score global d'une page |
-
-Le flag `--methodology negaoctet` enrichit SWDM v4 avec un **overhead per-visit** calibré sur les études françaises (NegaOctet 2022, ARCEP/ADEME 2022, ADEME Base Empreinte 2024) pour capturer la part ACV terminal/lifecycle absente du modèle bytes-only. Recommandé pour un site grand public hébergé/consulté en France.
-
-Le flag `--dc_country` (ou auto-détection via CDN/IP) dissocie l'intensité carbone du datacenter de celle du visiteur. Critique quand DC ≠ pays visiteur (ex. visiteur France + hébergement AWS Ireland).
-
-**Terminaux supportés (`--device`) :**
-
-`desktop`, `galaxyS9`, `galaxyS20`, `iPhone8`, `iPhone8Plus`, `iPhoneX`, `iPad`
-
-**Exemple de `headers.yaml` :**
-
-```yaml
-accept: 'text/html,application/xhtml+xml,application/xml'
-accept-encoding: 'gzip, deflate, br'
-accept-language: 'fr-FR,fr;q=0.9'
-```
-
-**Exemple de `login.yaml` :**
-
-```yaml
-url: 'https://www.example.com/login'
-fields:
-  - selector: '#username'
-    value: monlogin
-  - selector: '#password'
-    value: monmotdepasse
-loginButtonSelector: '#btn-login'
-waitForTimeout: 2000
-```
-
-**Exemple de `proxy.yaml` :**
-
-```yaml
-server: '<host>:<port>'
-user: '<username>'
-password: '<password>'
-```
-
-### Formats des rapports
-
-#### Excel (xlsx)
-
-```bash
-nr analyse url.yaml results.xlsx
-# ou
-nr analyse url.yaml results --format xlsx
-```
-
-Le rapport Excel contient :
-- Un onglet global : moyenne de l'EcoIndex, pages et règles prioritaires à corriger.
-- Un onglet par URL : EcoIndex, consommation eau/GES, tableau des bonnes pratiques.
-
-![Onglet global](./docs/rapport-xlsx-global.png)
-![Onglet page](./docs/rapport-xlsx-detail-page.png)
-
-#### HTML
-
-```bash
-nr analyse url.yaml results.html
-# ou
-nr analyse --url https://www.example.com --format html
-```
-
-Le rapport HTML contient :
-- Une page résumé : nombre de scénarios, erreurs, tableau récapitulatif, bonnes pratiques non respectées.
-- Une page par scénario : détail des requêtes, poids, EcoIndex, eau, GES et bonnes pratiques.
-
-![Page globale](./docs/rapport-html-global.jpeg)
-![Page scénario](./docs/rapport-html-detail-page.jpeg)
-
-#### InfluxDB/Grafana
-
-Envoie les données vers une instance InfluxDB pour visualisation dans Grafana :
-
-```bash
-nr analyse url.yaml --format influxdb \
-  --influxdb_hostname http://localhost:8086 \
-  --influxdb_org mon-org \
-  --influxdb_token mon-token \
-  --influxdb_bucket mon-bucket
-```
-
-Pour générer simultanément un rapport HTML avec lien Grafana :
-
-```bash
-nr analyse url.yaml results.html --format influxdbhtml \
-  --influxdb_hostname http://localhost:8086 \
-  --influxdb_org mon-org \
-  --influxdb_token mon-token \
-  --influxdb_bucket mon-bucket \
-  --grafana_link http://localhost:3000/d/YoK0Xjb4k/nr-analysis
-```
-
-![Dashboard Grafana](./docs/grafana-dashboard.png)
-![Rapport HTML avec InfluxDB](./docs/rapport-html-global-avec-influxdb.jpeg)
-
----
-
-## ParseSiteMap
-
-Convertit une sitemap XML en fichier YAML utilisable par `nr analyse` :
-
-```bash
-nr parseSitemap https://www.example.com/sitemap.xml url.yaml
-```
-
-| Paramètre          | Description                                   | Défaut     |
-| ------------------ | --------------------------------------------- | ---------- |
-| `sitemap_url`      | URL de la sitemap à transformer               | *(requis)* |
-| `yaml_output_file` | Chemin du fichier YAML généré                 | `url.yaml` |
-
-## Flags généraux
-
-| Flag   | Description                                                        |
-| ------ | ------------------------------------------------------------------ |
-| `--ci` | Désactive la barre de progression pour les environnements CI/CD    |
-
----
-
-# Référentiel des règles évaluées
-
-Chaque page auditée est notée sur 4 axes indépendants. Le grade global va de **A** (excellent) à **G** (très mauvais).
-
-| Axe | Score | Source des règles |
-| --- | ----- | ----------------- |
-| **Environnement** | 0–100 | 38 règles d'éco-conception (RGESN, GR491, WSG) exécutées dans la page |
-| **Social (a11y)** | 0–100 | 12 contrôles Tanaguru/RGAA + 5 contrôles complémentaires NR |
-| **Sécurité (cyber)** | 0–100 | 13 contrôles serveur (TLS, en-têtes HTTP, cookies, DNSSEC…) |
-| **Performance serveur** | 0–100 | 9 contrôles d'infrastructure (HTTP/2, compression, cache, CDN…) |
-
-Chaque règle renvoie un **niveau de conformité** :
-
-- `A` : règle respectée
-- `B` : amélioration mineure
-- `C` : règle non respectée
-
-Le score global d'un axe est la moyenne pondérée des niveaux selon la criticité.
-
----
-
-## 1. Environnement — règles d'éco-conception (38)
-
-### 1.1 Optimisation du transfert (poids et requêtes)
-
-| Règle | ID | Ce qu'elle mesure | Critère de réussite |
-| ----- | -- | ----------------- | ------------------- |
-| Limiter le nombre de domaines | `DomainsNumber` | Nombre de domaines tiers contactés | < 3 |
-| Limiter le nombre de requêtes HTTP | `HttpRequests` | Nombre total de requêtes | < 27 |
-| Compresser les ressources | `CompressHttp` | Taux de ressources servies en gzip/brotli | ≥ 95 % |
-| Ajouter des en-têtes de cache | `AddExpiresOrCacheControlHeaders` | `Expires` ou `Cache-Control` sur les ressources statiques | ≥ 95 % |
-| Utiliser des ETags | `UseETags` | Présence de l'en-tête `ETag` | ≥ 95 % |
-| Pas de cookie pour les ressources statiques | `NoCookieForStaticRessources` | Absence de `Cookie` sur images, CSS, JS | 100 % |
-| Limiter la taille des cookies | `MaxCookiesLength` | Poids par domaine | < 512 octets |
-| Éviter les redirections | `NoRedirect` | Nombre de redirections HTTP rencontrées | 0 |
-| Éviter les requêtes en erreur | `HttpError` | Nombre de réponses HTTP 4xx/5xx | 0 |
-
-### 1.2 Optimisation des assets
-
-| Règle | ID | Ce qu'elle mesure | Critère de réussite |
-| ----- | -- | ----------------- | ------------------- |
-| Minifier les CSS | `MinifiedCss` | Taux de fichiers CSS minifiés | ≥ 95 % |
-| Minifier les JS | `MinifiedJs` | Taux de fichiers JS minifiés | ≥ 95 % |
-| Externaliser les CSS | `ExternalizeCss` | CSS dans un fichier `.css`, pas inline | présent |
-| Externaliser les JS | `ExternalizeJs` | JS dans un fichier `.js`, pas inline | présent |
-| Limiter le nombre de fichiers CSS | `StyleSheets` | Nombre de fichiers CSS chargés | < 3 |
-| Valider le JavaScript | `JsValidate` | Erreurs JS détectées dans la console | 0 |
-
-### 1.3 Images
-
-| Règle | ID | Ce qu'elle mesure | Critère de réussite |
-| ----- | -- | ----------------- | ------------------- |
-| Ne pas retailler dans le navigateur | `DontResizeImageInBrowser` | Images dont la taille rendue ≪ taille source | 0 |
-| Ne pas télécharger des images inutilement | `ImageDownloadedNotDisplayed` | Images chargées mais non affichées | 0 |
-| Éviter les `<img src="">` vides | `EmptySrcTag` | Tags `<img src="">` vides | 0 |
-| Optimiser les images bitmap | `OptimizeBitmapImages` | Compression suffisante des JPEG/PNG | seuil interne |
-| Optimiser les images SVG | `OptimizeSvg` | Compression et nettoyage des SVG | seuil interne |
-| Utiliser des formats modernes | `ModernImageFormats` | Taux d'images bitmap servies en **AVIF / WebP / JPEG XL** | 100 % |
-| Lazy-loading images & iframes | `LazyLoadImages` | `loading="lazy"` sur les `<img>` et `<iframe>` hors viewport | ≥ 80 % |
-| Images responsives (`srcset`) | `ResponsiveImages` | Attribut `srcset` / `sizes` ou `<picture><source>` parent | ≥ 50 % |
-
-### 1.4 Polices
-
-| Règle | ID | Ce qu'elle mesure | Critère de réussite |
-| ----- | -- | ----------------- | ------------------- |
-| Polices standards | `UseStandardTypefaces` | Pas plus de N fichiers de polices personnalisées | seuil interne |
-| Optimiser le chargement des polices | `OptimizeFonts` | Nombre de fichiers ≤ 2 **et** poids total ≤ 100 Ko | les deux |
-| Sous-ensemble (unicode-range) | `FontSubsetting` | Utilisation de `unicode-range` dans `@font-face` | au moins 1 |
-
-### 1.5 Performances de rendu
-
-| Règle | ID | Ce qu'elle mesure | Critère de réussite |
-| ----- | -- | ----------------- | ------------------- |
-| Éviter les ressources bloquantes | `NoRenderBlockingResources` | `<script>` dans `<head>` sans `async` / `defer` / `module` | 0 |
-| Ne pas abuser des preload/prefetch | `NoExcessivePreload` | Nombre de `<link rel="preload"\|prefetch">` | ≤ 5 |
-| Pas d'autoplay vidéo/audio | `NoAutoplayVideo` | Présence d'attributs `autoplay` | 0 |
-| Pas de plugins navigateur | `Plugins` | `<object>`, `<embed>` (Flash, Java, Silverlight) | 0 |
-
-### 1.6 Confidentialité et empreinte indirecte
-
-| Règle | ID | Ce qu'elle mesure | Critère de réussite |
-| ----- | -- | ----------------- | ------------------- |
-| Limiter les scripts de tracking | `TrackingScripts` | Domaines connus (Google, Meta, TikTok, Snap, Pinterest, Reddit, OneTrust, Cookiebot…) | 0 |
-| Limiter les iframes tierces | `NoExternalIframes` | iframes vers des domaines tiers | seuil interne |
-| Pas de widgets sociaux officiels | `SocialNetworkButton` | Présence X/Twitter, LinkedIn badges, Facebook Like, etc. | 0 |
-
-### 1.7 Adaptation à l'utilisateur
-
-| Règle | ID | Ce qu'elle mesure | Critère de réussite |
-| ----- | -- | ----------------- | ------------------- |
-| Print CSS | `PrintStyleSheet` | `@media print` ou stylesheet `media="print"` | présent |
-| Respect `prefers-reduced-motion` | `ReducedMotion` | `@media (prefers-reduced-motion)` dans le CSS | présent |
-| Support du mode sombre | `DarkModeSupport` | `<meta name="color-scheme">` **ou** `color-scheme` CSS sur `:root` | présent |
-| Sous-titres vidéo | `VideoSubtitles` | `<track kind="captions\|subtitles">` sur chaque `<video>` | tous |
-
----
-
-## 2. Social — accessibilité (17 contrôles)
-
-### 2.1 Tanaguru / RGAA (12)
-
-| Contrôle | ID | Ce qu'il vérifie |
-| -------- | -- | ---------------- |
-| Alternatives textuelles | `ImgAlt` | Toutes les `<img>` non décoratives portent un attribut `alt` |
-| Langue du document | `DocumentLanguage` | `<html lang="...">` présent et valide |
-| Titre de page | `PageTitle` | `<title>` non vide, distinct entre pages |
-| Structure des titres | `HeadingStructure` | Un seul `<h1>`, hiérarchie h1-h6 sans saut |
-| Étiquettes de formulaire | `FormLabel` | Chaque champ a un `<label>` ou `aria-label` |
-| Intitulés de liens | `LinkText` | Pas de « cliquez ici », « en savoir plus » seuls |
-| Nom des boutons | `ButtonName` | Texte visible ou `aria-label` sur tout `<button>` |
-| Landmarks ARIA | `Landmarks` | `<main>`, `<nav>`, `<header>`, `<footer>` ou rôles équivalents |
-| En-têtes de tableau | `TableHeaders` | `<th>` dans les tableaux de données |
-| Contraste des couleurs | `ColorContrast` | Ratio ≥ 4.5:1 (texte normal) / 3:1 (grand texte) |
-| Titre des iframes | `IframeTitle` | Attribut `title` sur chaque `<iframe>` |
-| Ordre de tabulation | `TabIndex` | Pas de `tabindex` > 0 |
-
-### 2.2 Contrôles NR complémentaires (5)
-
-| Contrôle | ID | Ce qu'il vérifie |
-| -------- | -- | ---------------- |
-| `font-display: swap` | `FontDisplaySwap` | Évite le FOIT (texte invisible pendant le chargement) |
-| Preload des polices critiques | `FontPreload` | `<link rel="preload" as="font">` pour polices `font-display: swap` |
-| Sous-ensemble de polices | `FontSubset` | Présence d'`unicode-range` |
-| Bandeau consentement | `ConsentBanner` | Bandeau RGPD détecté avant le dépôt de cookies |
-| Cookies tiers | `ThirdPartyCookies` | Cookies déposés par des domaines tiers avant consentement |
-
----
-
-## 3. Cyber — sécurité serveur (13 contrôles)
-
-| Contrôle | ID | Ce qu'il vérifie | Sévérité |
-| -------- | -- | ---------------- | -------- |
-| Version TLS | `Tls` | TLS 1.2 ou 1.3 uniquement | Critique |
-| HSTS | `Hsts` | En-tête `Strict-Transport-Security` ≥ 6 mois | Important |
-| CSP | `Csp` | En-tête `Content-Security-Policy` présent | Important |
-| X-Content-Type-Options | `XContentTypeOptions` | `nosniff` | Important |
-| X-Frame-Options | `XFrameOptions` | `DENY` ou `SAMEORIGIN` (anti-clickjacking) | Important |
-| Referrer-Policy | `ReferrerPolicy` | Politique restrictive | Recommandé |
-| Permissions-Policy | `PermissionsPolicy` | Restriction des APIs sensibles (caméra, micro…) | Recommandé |
-| Drapeaux cookies | `CookieFlags` | `Secure`, `HttpOnly`, `SameSite` sur tous les `Set-Cookie` | Critique |
-| Fuite serveur | `ServerLeak` | En-tête `Server` ne révèle pas la version | Recommandé |
-| security.txt | `SecurityTxt` | `/.well-known/security.txt` conforme RFC 9116 | Recommandé |
-| Redirection HTTP→HTTPS | `HttpToHttpsRedirect` | Redirection 301 du `http://` vers `https://` | Critique |
-| Cross-Origin Isolation | `CrossOriginIsolation` | COOP + CORP (protection Spectre) | Recommandé |
-| DNSSEC | `Dnssec` | Zone DNS signée | Recommandé |
-
----
-
-## 4. Performance serveur (9 contrôles)
-
-| Contrôle | ID | Ce qu'il vérifie | Sévérité |
-| -------- | -- | ---------------- | -------- |
-| OCSP Stapling | `OcspStapling` | TLS handshake court (révocation pré-signée) | Recommandé |
-| Version HTTP | `HttpVersion` | HTTP/2 ou HTTP/3 (multiplexage) | Important |
-| Cache-Control | `CacheControl` | Politique de cache explicite | Important |
-| Compression | `Compression` | gzip ou Brotli activés (Brotli recommandé) | Important |
-| IPv6 DNS | `DnsIpv6` | Au moins 1 enregistrement AAAA | Recommandé |
-| Redondance DNS | `DnsRedundancy` | ≥ 2 IPs distinctes en A/AAAA | Recommandé |
-| TLS Resumption | `TlsResumption` | Session tickets ou session ID actifs | Recommandé |
-| CDN | `Cdn` | Signature CDN détectée (Cloudflare, Fastly, OVH CDN…) | Informatif |
-
----
-
-## 5. Métriques environnementales calculées
-
-En plus des règles, l'outil estime pour chaque page :
-
-| Métrique | Modèle | Unité |
-| -------- | ------ | ----- |
-| **Score de durabilité** | Pondération des règles d'éco-conception | 0–100 (A–G) |
-| **CO₂ par visite** | Sustainable Web Design v4 + green hosting (Green Web Foundation) | g CO₂eq |
-| **Eau par visite** | SWD v4 × WUE (1.8 L/kWh — moyenne UNESCO) | cL |
-| **Énergie par visite** | SWD v4 (0.81 kWh/GB transféré) | Wh |
-| **CO₂ pour 1 M visites** | extrapolation linéaire | kg CO₂eq |
-| **Eau pour 1 M visites** | extrapolation linéaire | L |
-| **Énergie pour 1 M visites** | extrapolation linéaire | kWh |
-| **Hébergement vert** | API Green Web Foundation | booléen (A/C) |
-
----
-
-# Licence et conditions d'utilisation
-
-Cet outil est distribué sous licence **GNU Affero General Public License v3.0 ou ultérieure (AGPL-3.0-or-later)** — voir `LICENSE`.
-
-Il intègre des composants dérivés de l'extension Chrome [GreenIT-Analysis](https://github.com/cnumr/GreenIT-Analysis) (Copyright © 2019 didierfred) et du projet [EcoMeter](https://gitlab.com/ecoconceptionweb/ecometer) (Copyright © 2016), tous deux sous AGPL-3.0. Voir les en-têtes de fichiers dans `nr-core/`.
-
-## Implications AGPL pour les utilisateurs
-
-L'usage commercial, interne ou externe, est autorisé : l'AGPL n'interdit ni la vente ni l'usage à but lucratif. Un usage interne sans redistribution ne crée aucune obligation au-delà du respect des en-têtes de copyright.
-
-Deux cas demandent plus d'attention. Si vous déployez l'outil (modifié ou non) comme service accessible en réseau, vous devez rendre le code source disponible, avec vos modifications, à toute personne qui interagit avec ce service (clause §13 de l'AGPL). Et toute œuvre dérivée que vous redistribuez doit rester sous AGPL-3.0.
-
-En cas de doute, le [texte officiel de l'AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.html) fait foi.
-
-## Crédits
-
-- Algorithme EcoIndex et règles d'éco-conception : [collectif GreenIT.fr](https://collectif.greenit.fr/), [ecoindex.fr](https://www.ecoindex.fr/).
-- Extension GreenIT-Analysis : [cnumr / didierfred](https://github.com/cnumr/GreenIT-Analysis).
-- Modèle Sustainable Web Design v4 : [Green Web Foundation](https://www.thegreenwebfoundation.org/).
-- Intégration CLI, refonte 2026, modèles synthétique / NegaOctet / ARCEP / ADEME : Institut du Numérique Responsable.
+Le rapport global est écrit dans `resultat/`.
+
+### Options courantes
+
+| Option | Effet |
+| ------ | ----- |
+| `--language en` | Rapport en anglais (défaut : `fr`) |
+| `--format xlsx` | Rapport Excel au lieu de HTML (avec `--url`) |
+| `--mobile` | Simule une connexion mobile |
+| `--device iPhoneX` | Simule un appareil (voir `nr analyse --help`) |
+| `--country FRA` | Pays des visiteurs, pour l'intensité carbone (défaut : `FRA`) |
+| `--wait_until networkidle2` | À essayer si une page part en timeout |
+| `--ci` | Sortie texte sans barre de progression |
+
+Toutes les options, les scénarios YAML (clics, saisie, défilement), l'export
+InfluxDB/Grafana et le détail des règles sont dans le
+[guide d'utilisation détaillé](./docs/guide.md).
+
+## Documentation
+
+- [Guide d'utilisation détaillé](./docs/guide.md) : toutes les options et le
+  référentiel complet des règles.
+- [Architecture et guide du contributeur](./docs/architecture.md) : organisation
+  du code et ajout d'une règle.
+- [Journal des modifications](./CHANGELOG.md)
+- [Politique de sécurité](./SECURITY.md)
+
+## Contribuer
+
+Les contributions sont bienvenues, y compris les corrections de documentation.
+Lisez le [guide de contribution](./CONTRIBUTING.md) : les commits doivent être
+signés avec `git commit -s` (DCO). Lancez `npm test` avant d'ouvrir une pull
+request.
+
+Le code de `nr-core/` est regroupé dans `dist/nrBundle.js`, injecté dans la
+page auditée. Après toute modification de `nr-core/`, relancez `npm run build`.
+
+## Licence
+
+[AGPL-3.0-or-later](./LICENSE). L'usage commercial est autorisé. Si vous
+proposez l'outil, modifié ou non, comme service accessible en réseau, vous devez
+publier son code source. Détails dans la section
+[Licence du guide](./docs/guide.md#licence-et-conditions-dutilisation).
+
+Le projet intègre du code dérivé de
+[GreenIT-Analysis](https://github.com/cnumr/GreenIT-Analysis) (© 2019
+didierfred) et d'[EcoMeter](https://gitlab.com/ecoconceptionweb/ecometer)
+(© 2016), tous deux sous AGPL-3.0.
+
+Crédits : [collectif GreenIT.fr](https://collectif.greenit.fr/) et
+[ecoindex.fr](https://www.ecoindex.fr/) pour l'EcoIndex et les règles,
+[Green Web Foundation](https://www.thegreenwebfoundation.org/) pour le modèle
+Sustainable Web Design v4. Intégration CLI, refonte 2026 et modèle de synthèse :
+[Institut du Numérique Responsable](https://institutnr.org/).
