@@ -123,7 +123,7 @@ async function analyse_core(options) {
             const firstHost = new URL(pagesInformations[0].url).hostname.replace(/^www\./, '');
             const prefix = `${datePrefix()}_${slugifyHost(firstHost)}`;
             options.reportPrefix = prefix;
-            options.report_output_file = path.join(dir, `${prefix}_index.html`);
+            options.report_output_file = path.join(dir, listReportFileName(prefix, options.format));
             if (!options.format) options.format = 'html';
         }
     }
@@ -205,6 +205,12 @@ function readHeaders(headersFile) {
     return parseYamlFile(path.resolve(headersFile), '--headers');
 }
 
+// Default report file name for a flat URL list (.txt / .list). The HTML report
+// is an index page with one file per scenario; the Excel report is one file.
+function listReportFileName(prefix, format) {
+    return format && format.toLowerCase() === 'xlsx' ? `${prefix}.xlsx` : `${prefix}_index.html`;
+}
+
 const SUPPORTED_FORMATS = ['xlsx', 'html', 'influxdb', 'influxdbhtml'];
 
 function getReportFormat(format, filename) {
@@ -226,3 +232,4 @@ function analyse(options) {
 }
 
 module.exports = analyse;
+module.exports.listReportFileName = listReportFileName;
