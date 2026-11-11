@@ -186,8 +186,9 @@ Accessibility checks run in the page, in `nr-core/a11y/tanaguruChecks.js` and
 
 ## 6. Verifying a change
 
-The project has no automated test suite yet: `npm test` fails by design. Before
-opening a pull request, do at least this:
+`npm test` rebuilds the bundle and runs the tests in `tests/` (regressions,
+server, browser through Puppeteer). They do not cover everything: before opening
+a pull request, run them and then do at least this:
 
 ```bash
 npm run build

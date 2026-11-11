@@ -33,8 +33,9 @@ Attention au bundle : `builder.js` concatène `nr-core/` en un fichier
 Modifiez `nr-core/` sans relancer `npm run build` et votre code ne s'exécute
 pas.
 
-Le projet n'a pas encore de suite de tests automatisés. La section « Vérifier
-une modification » du guide d'architecture décrit le contrôle manuel attendu.
+Lancez `npm test` (tests de non-régression dans `tests/`). La section « Vérifier
+une modification » du guide d'architecture décrit le contrôle manuel attendu en
+complément.
 Indiquez dans votre pull request ce que vous avez vérifié, et sur quelle page.
 
 Le formatage suit Prettier, configuré dans `.prettierrc` :

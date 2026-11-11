@@ -102,9 +102,11 @@ function computeCo2(responsesSizeBytes, isGreen = false, options = {}) {
         waterLPerVisit += NEGAOCTET_WATER_L_PER_VISIT;
     }
     const rounded = Math.round(totalGrams * 100) / 100;
+    // Grade only the transferred-byte component, with the same scope in both modes.
+    const scoredGrams = trace.co2.total;
     let complianceLevel = 'C';
-    if (rounded <= CO2_THRESHOLDS.A) complianceLevel = 'A';
-    else if (rounded <= CO2_THRESHOLDS.B) complianceLevel = 'B';
+    if (scoredGrams <= CO2_THRESHOLDS.A) complianceLevel = 'A';
+    else if (scoredGrams <= CO2_THRESHOLDS.B) complianceLevel = 'B';
 
     const co2Kg1M = Math.round((totalGrams * 1e6) / 1000 * 10) / 10;
     const waterL1M = Math.round(waterLPerVisit * 1e6);
@@ -131,6 +133,8 @@ function computeCo2(responsesSizeBytes, isGreen = false, options = {}) {
 
     return {
         value: rounded,
+        scoredGrams,
+        scoreScope: 'transferred-bytes',
         firstVisitGrams: r3(firstVisitGrams),
         cacheWeightedGrams: r3(cacheWeightedGrams),
         transferredKb: Math.round(bytes / 1000),
@@ -158,9 +162,13 @@ function computeCo2(responsesSizeBytes, isGreen = false, options = {}) {
                 ? 'SWDM v4 + NegaOctet/ARCEP/ADEME (FR LCA)'
                 : 'SWDM v4 (transferred bytes only)',
         result: {
+            scoredGrams,
+            scoreScope: 'transferred-bytes',
             complianceLevel,
             comment: String(rounded),
-            detailComment: '',
+            detailComment: methodology === 'negaoctet'
+                ? 'Note fondée sur la part liée au transfert ; le total inclut un forfait fixe de 1,5 g CO₂e/visite, exclu de la note.'
+                : '',
         },
     };
 }

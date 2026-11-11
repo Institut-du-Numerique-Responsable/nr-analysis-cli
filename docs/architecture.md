@@ -187,8 +187,9 @@ un `npm run build`.
 
 ## 6. Vérifier une modification
 
-Le projet n'a pas encore de suite de tests automatisés : `npm test` échoue par
-construction. Avant d'ouvrir une pull request, faites au minimum ceci :
+`npm test` reconstruit le bundle puis lance les tests de `tests/` (régressions,
+serveur, navigateur via Puppeteer). Ils ne couvrent pas tout : avant d'ouvrir
+une pull request, lancez-les puis faites au minimum ceci :
 
 ```bash
 npm run build

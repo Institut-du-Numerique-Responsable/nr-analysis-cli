@@ -12,6 +12,8 @@ const { computeSocialScore } = require('./socialScoring');
 const { auditServer } = require('./serverAudit');
 const { computeSecurityScore, computeServerScore } = require('./auditScoring');
 
+let runBrowserAudit;
+
 const SUBRESULTS_DIRECTORY = path.join(__dirname, '../results');
 
 //Analyse a scenario
@@ -233,17 +235,17 @@ async function doAnalysis(page, pptrHar, name, translator) {
 
     await injectChromeObjectInPage(page, translator);
 
-    // Inject the bundle, run it, then remove it so it cannot interfere with the analysis
-    const script = await page.addScriptTag({
-        path: path.join(__dirname, '../dist/nrBundle.js'),
-    });
-    await script.evaluate((x) => x.remove());
-
-    // Expose node data to the browser context
-    await page.evaluate((x) => (har = x), harObj.log);
-    await page.evaluate((x) => (resources = x), ressourceTree.frameTree.resources);
-
-    const result = await page.evaluate(() => launchAnalyse());
+    // DevTools evaluation runs the trusted audit without disabling the page's CSP.
+    // A fresh function scope also allows repeated audits on the same document.
+    if (!runBrowserAudit) {
+        const bundle = fs.readFileSync(path.join(__dirname, '../dist/nrBundle.js'), 'utf8');
+        runBrowserAudit = new Function('harData', 'resourceData', `${bundle}
+            har = harData;
+            resources = resourceData;
+            return launchAnalyse();
+        `);
+    }
+    const result = await page.evaluate(runBrowserAudit, harObj.log, ressourceTree.frameTree.resources);
     if (name) {
         result.name = name;
     }
